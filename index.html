@@ -1,0 +1,1059 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clustering</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-theme="kmeans">
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <span class="brand-mark">Clustering</span>
+          <span class="brand-note">interactive explainer</span>
+        </div>
+        <nav class="tabs" aria-label="Clustering methods">
+          <button class="tab is-active" type="button" data-target="kmeans" aria-pressed="true">
+            K-Means
+          </button>
+          <button class="tab" type="button" data-target="hierarchical" aria-pressed="false">
+            Hierarchical
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        <article class="method method-active" id="kmeans" data-theme="kmeans">
+          <section class="hero reveal">
+            <div class="hero-copy">
+              <p class="eyebrow">K-Means</p>
+              <h1>Watch unlabeled points become structure.</h1>
+              <p class="lede">
+                K-means is a fast, visual way to partition observations into compact groups. This
+                experience stays focused on the decisions that change the answer: choosing
+                <em>K</em>, inspecting within-cluster variation, handling scale, and spotting when
+                a result is only a local optimum.
+              </p>
+              <div class="hero-pills">
+                <span>choose K</span>
+                <span>inspect inertia</span>
+                <span>compare starts</span>
+                <span>translate to R</span>
+              </div>
+            </div>
+            <div class="hero-visual surface surface-hero">
+              <div class="surface-heading">
+                <span>Animated clustering</span>
+                <span class="surface-chip">live</span>
+              </div>
+              <svg id="kmeans-hero-plot" class="plot plot-large" viewBox="0 0 620 520" role="img" aria-label="Animated K-means clustering hero"></svg>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Unsupervised Learning</p>
+              <h2>No labels. Only proximity.</h2>
+              <p>
+                Unsupervised learning starts without a known outcome column. The algorithm only
+                sees the features and asks: which observations naturally sit near one another?
+                K-means answers that question by building groups around centroids.
+              </p>
+              <div class="control-row">
+                <button id="kmeans-unsupervised-toggle" class="button-pill" type="button">
+                  Reveal structure
+                </button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Before color is added, the points are only geometry. The cluster labels are
+                    created by the method, not discovered from a hidden answer key.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Decide whether distance is meaningful in your variables. If one variable is on
+                    a much larger scale, K-means will treat it as more important.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>x_scaled &lt;- scale(df[, vars])
+fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>What K-means solves</span>
+                <span class="surface-caption">same points, two ways of seeing them</span>
+              </div>
+              <svg id="kmeans-unsupervised-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Unsupervised learning reveal"></svg>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Objective</span>
+                  <strong class="metric-value">minimize spread</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Signal</span>
+                  <strong class="metric-value">distance</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Shape bias</span>
+                  <strong class="metric-value">roundish groups</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Algorithm Loop</p>
+              <h2>The algorithm is a repeated negotiation.</h2>
+              <p>
+                K-means alternates between two operations: compute centroids from the current group
+                assignments, then reassign every point to the nearest centroid. The loop stops when
+                no observation wants to move.
+              </p>
+              <div class="range-row">
+                <label for="kmeans-algorithm-k">K</label>
+                <input id="kmeans-algorithm-k" type="range" min="2" max="6" step="1" value="3" />
+                <span id="kmeans-algorithm-k-value" class="value-pill">3</span>
+              </div>
+              <div class="control-row">
+                <button id="kmeans-step-prev" class="button-pill subtle" type="button">Back</button>
+                <button id="kmeans-step-next" class="button-pill" type="button">Next step</button>
+                <button id="kmeans-step-play" class="button-pill subtle" type="button">Play</button>
+              </div>
+              <ol class="step-list" id="kmeans-step-list">
+                <li>Choose K</li>
+                <li>Random start</li>
+                <li>Compute centroids</li>
+                <li>Reassign points</li>
+                <li>Repeat until stable</li>
+              </ol>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    The interesting moments are when points jump across a boundary and when a
+                    centroid moves enough to drag the next boundary with it.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    If the loop stabilizes quickly but the clusters still look implausible, try new
+                    random starts before changing the whole modeling strategy.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>fit &lt;- kmeans(x_scaled, centers = 3, nstart = 1)
+fit$centers
+fit$cluster</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span id="kmeans-algorithm-title">Choose K</span>
+                <span id="kmeans-algorithm-subtitle" class="surface-caption">step 1</span>
+              </div>
+              <svg id="kmeans-algorithm-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="K-means algorithm loop"></svg>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Moved points</span>
+                  <strong id="kmeans-algorithm-moved" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Within-cluster variation</span>
+                  <strong id="kmeans-algorithm-inertia" class="metric-value">-</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Loop pass</span>
+                  <strong id="kmeans-algorithm-loop" class="metric-value">0</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Choosing K</p>
+              <h2>Read the bend, not just the number.</h2>
+              <p>
+                The K slider updates the clustering instantly. Pair the scatterplot with the elbow
+                curve and silhouette signal: you want a K that cuts within-cluster variation
+                sharply without over-fragmenting the structure.
+              </p>
+              <div class="range-row">
+                <label for="kmeans-k-slider">K</label>
+                <input id="kmeans-k-slider" type="range" min="2" max="8" step="1" value="3" />
+                <span id="kmeans-k-slider-value" class="value-pill">3</span>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Look for the point where the elbow starts to flatten. Then check whether the
+                    scatterplot still tells a coherent story at that same K.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    If the elbow is ambiguous, inspect silhouette and cluster sizes. Tiny,
+                    unstable clusters are usually a sign that K is too large.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>wss &lt;- sapply(1:8, function(k) {
+  kmeans(x_scaled, centers = k, nstart = 25)$tot.withinss
+})</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-tall">
+              <div class="surface-heading">
+                <span>Live K sandbox</span>
+                <span class="surface-caption">scatter, elbow, silhouette</span>
+              </div>
+              <svg id="kmeans-k-plot" class="plot" viewBox="0 0 620 360" role="img" aria-label="K-means clusters for selected K"></svg>
+              <div class="plot-grid">
+                <svg id="kmeans-elbow-plot" class="plot plot-small" viewBox="0 0 300 180" role="img" aria-label="Elbow method"></svg>
+                <svg id="kmeans-silhouette-plot" class="plot plot-small" viewBox="0 0 300 180" role="img" aria-label="Silhouette scores"></svg>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Inertia</span>
+                  <strong id="kmeans-k-inertia" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Silhouette</span>
+                  <strong id="kmeans-k-silhouette" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Largest cluster share</span>
+                  <strong id="kmeans-k-balance" class="metric-value">0%</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Random Starts</p>
+              <h2>Good geometry can still begin badly.</h2>
+              <p>
+                Because K-means starts from a random configuration, two runs on the same data can
+                end at different solutions. The right visual question is not “did it converge?” but
+                “did it converge to a good minimum?”
+              </p>
+              <div class="control-row">
+                <button id="kmeans-random-reroll" class="button-pill" type="button">New random start</button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Compare the left and right panels. The same points can be partitioned very
+                    differently depending on where the centroids start.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Increase the number of random starts until the best solution becomes stable.
+                    Treat a single start as a draft, not a final answer.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>fit_1 &lt;- kmeans(x_scaled, centers = 3, nstart = 1)
+fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-dual">
+              <div class="surface-heading">
+                <span>Local optimum demo</span>
+                <span id="kmeans-random-summary" class="surface-caption">compare one start to the best of many</span>
+              </div>
+              <div class="split-visuals">
+                <div class="subsurface">
+                  <span class="subsurface-title">Current start</span>
+                  <svg id="kmeans-random-current" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Current random start solution"></svg>
+                </div>
+                <div class="subsurface">
+                  <span class="subsurface-title">Best of many starts</span>
+                  <svg id="kmeans-random-best" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Best random start solution"></svg>
+                </div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Current inertia</span>
+                  <strong id="kmeans-random-current-inertia" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Best inertia</span>
+                  <strong id="kmeans-random-best-inertia" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Improvement</span>
+                  <strong id="kmeans-random-gap" class="metric-value">0%</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Scaling</p>
+              <h2>Raw units decide the answer unless you stop them.</h2>
+              <p>
+                In this example, sock counts span a much wider range than computer counts. Without
+                scaling, K-means largely clusters by socks. With scaling, both variables get a fair
+                vote and the groups reorganize around a more meaningful business pattern.
+              </p>
+              <div class="segment-group" id="kmeans-scale-controls">
+                <button class="segment is-active" type="button" data-scale="raw">Raw units</button>
+                <button class="segment" type="button" data-scale="scaled">Scaled</button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Watch the color pattern rotate when scaling is turned on. The point locations do
+                    not change, only the distance calculation does.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    If one feature uses larger numbers for purely unit-related reasons, standardize
+                    before you judge cluster quality.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>x_raw &lt;- df[, c("socks", "computers")]
+x_scaled &lt;- scale(x_raw)
+kmeans(x_scaled, centers = 2, nstart = 25)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>Socks versus computers</span>
+                <span id="kmeans-scale-note" class="surface-caption">raw units emphasize socks</span>
+              </div>
+              <svg id="kmeans-scale-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Scaling demo for K-means"></svg>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Distance basis</span>
+                  <strong id="kmeans-scale-basis" class="metric-value">raw</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Cluster story</span>
+                  <strong id="kmeans-scale-story" class="metric-value">socks dominate</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Recommended default</span>
+                  <strong class="metric-value">scale first</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Outliers</p>
+              <h2>One stray point can bend a centroid.</h2>
+              <p>
+                K-means always assigns every observation to a cluster. That means an outlier is not
+                ignored. It gets absorbed somewhere, often pulling the nearest centroid away from the
+                dense part of its own cluster.
+              </p>
+              <div class="segment-group" id="kmeans-outlier-controls">
+                <button class="segment is-active" type="button" data-outlier="hide">Without outlier</button>
+                <button class="segment" type="button" data-outlier="show">With outlier</button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    The dashed centroid marks the clean solution. When the outlier appears, the live
+                    centroid shifts toward it and the boundary changes with it.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Investigate extreme observations before trusting the final partition. The right
+                    fix could be transformation, scaling, or a different clustering method.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>fit &lt;- kmeans(scale(df[, vars]), centers = 2, nstart = 25)
+df$cluster &lt;- fit$cluster</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>Outlier distortion</span>
+                <span id="kmeans-outlier-note" class="surface-caption">watch the right centroid move</span>
+              </div>
+              <svg id="kmeans-outlier-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Outlier distortion demo"></svg>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Right centroid shift</span>
+                  <strong id="kmeans-outlier-shift" class="metric-value">0.00</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Inertia change</span>
+                  <strong id="kmeans-outlier-inertia" class="metric-value">0%</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Practical read</span>
+                  <strong id="kmeans-outlier-story" class="metric-value">stable</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Interpretation</p>
+              <h2>Final clusters are summaries, not truth.</h2>
+              <p>
+                A final K-means result should be interpreted by comparing cluster centers, spread,
+                and size. Click a cluster card to isolate it and read its centroid in the same
+                language as your variables.
+              </p>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Separation matters, but so does meaning. A cluster is useful when its center and
+                    spread translate into a recognizable pattern in the real problem.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Summarize the original variables by cluster. If the profiles are not
+                    interpretable, revisit preprocessing or the chosen K.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>df$cluster &lt;- fit$cluster
+aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-tall">
+              <div class="surface-heading">
+                <span>Interpret the selected K</span>
+                <span class="surface-caption">linked to the K slider above</span>
+              </div>
+              <svg id="kmeans-final-plot" class="plot" viewBox="0 0 620 340" role="img" aria-label="Final K-means interpretation"></svg>
+              <div id="kmeans-cluster-cards" class="cluster-card-grid"></div>
+            </div>
+          </section>
+
+          <section class="chapter reveal chapter-checklist">
+            <div class="chapter-copy">
+              <p class="eyebrow">From Demo To Real Data</p>
+              <h2>Use the same sequence on an actual dataset.</h2>
+              <ul class="checklist">
+                <li>Start with variables where Euclidean distance makes domain sense.</li>
+                <li>Scale first unless raw units are intentionally meaningful.</li>
+                <li>Inspect several values of K with elbow, silhouette, and cluster size.</li>
+                <li>Run many random starts and keep the best objective value.</li>
+                <li>Check for outliers before you interpret centroids as real profiles.</li>
+                <li>Translate the final labels back to the original variables for interpretation.</li>
+              </ul>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>K-means R template</span>
+                <span class="surface-caption">compact workflow</span>
+              </div>
+              <pre class="code-panel"><code>x &lt;- scale(df[, vars])
+wss &lt;- sapply(1:8, function(k) kmeans(x, centers = k, nstart = 25)$tot.withinss)
+fit &lt;- kmeans(x, centers = 3, nstart = 25)
+df$cluster &lt;- fit$cluster
+aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
+            </div>
+          </section>
+        </article>
+
+        <article class="method" id="hierarchical" data-theme="hierarchical" hidden>
+          <section class="hero reveal">
+            <div class="hero-copy">
+              <p class="eyebrow">Hierarchical</p>
+              <h1>Grow the tree before you cut it.</h1>
+              <p class="lede">
+                Hierarchical clustering builds nested relationships from the bottom up. Instead of
+                committing to a cluster count at the start, you watch observations fuse, compare how
+                “close” is defined, then cut the dendrogram where the structure becomes convincing.
+              </p>
+              <div class="hero-pills">
+                <span>watch fusions</span>
+                <span>choose cut height</span>
+                <span>compare linkage</span>
+                <span>translate to R</span>
+              </div>
+            </div>
+            <div class="hero-visual surface surface-hero">
+              <div class="surface-heading">
+                <span>Animated dendrogram</span>
+                <span class="surface-chip">live</span>
+              </div>
+              <svg id="hier-hero-plot" class="plot plot-large" viewBox="0 0 620 520" role="img" aria-label="Animated hierarchical clustering dendrogram"></svg>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">What It Solves</p>
+              <h2>See every possible grouping in one structure.</h2>
+              <p>
+                Hierarchical clustering is useful when you do not want to lock in a cluster count
+                upfront. The dendrogram keeps the nested story intact, so you can inspect broad
+                groups first and then zoom into finer splits only if they add meaning.
+              </p>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    A dendrogram stores both local joins and higher-level structure. You are reading
+                    a sequence of fusions, not a final partition.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Decide whether you care more about nested interpretation or a single flat answer.
+                    If the tree matters, hierarchical clustering is often the better explainer.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>hc &lt;- hclust(dist(scale(df[, vars])), method = "average")
+plot(hc)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>Leaves and fusions</span>
+                <span class="surface-caption">the tree keeps the full path</span>
+              </div>
+              <svg id="hier-intro-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Hierarchical clustering introduction"></svg>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Start</span>
+                  <strong class="metric-value">one point each</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Build</span>
+                  <strong class="metric-value">bottom up</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Choose K</span>
+                  <strong class="metric-value">after plotting</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Reading The Tree</p>
+              <h2>Leaves stay fixed. Heights tell the story.</h2>
+              <p>
+                Use the slider to move through the first fusions. Every step joins the two closest
+                clusters under the chosen linkage rule. The only distance that matters on the
+                dendrogram is vertical fusion height.
+              </p>
+              <div class="range-row">
+                <label for="hier-merge-slider">Fusion step</label>
+                <input id="hier-merge-slider" type="range" min="1" max="8" step="1" value="3" />
+                <span id="hier-merge-value" class="value-pill">3</span>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Horizontal position is just ordering. The height of each merge is the actual
+                    dissimilarity. High late merges suggest strongly separated groups.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    If early merges look sensible and late merges jump sharply, the data likely
+                    contains a few meaningful groups rather than a smooth continuum.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>hc &lt;- hclust(dist(scale(df[, vars])), method = "complete")
+plot(hc, hang = -1)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-dual">
+              <div class="surface-heading">
+                <span>Fusion sequence</span>
+                <span id="hier-merge-note" class="surface-caption">step by step</span>
+              </div>
+              <div class="split-visuals">
+                <div class="subsurface">
+                  <span class="subsurface-title">Scatter</span>
+                  <svg id="hier-merge-scatter" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Scatter for hierarchical fusion step"></svg>
+                </div>
+                <div class="subsurface">
+                  <span class="subsurface-title">Dendrogram</span>
+                  <svg id="hier-merge-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Dendrogram fusion step"></svg>
+                </div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Clusters remaining</span>
+                  <strong id="hier-merge-clusters" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Current fusion height</span>
+                  <strong id="hier-merge-height" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Reading rule</span>
+                  <strong class="metric-value">vertical only</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Cut Height</p>
+              <h2>Pick the partition after you see the tree.</h2>
+              <p>
+                Move the cut line upward and downward. High cuts produce a few broad clusters. Low
+                cuts create many fine-grained groups. The right cut is the one that preserves the
+                separation you can defend.
+              </p>
+              <div class="range-row">
+                <label for="hier-cut-slider">Cut height</label>
+                <input id="hier-cut-slider" type="range" min="5" max="95" step="1" value="55" />
+                <span id="hier-cut-value" class="value-pill">55%</span>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Large empty vertical gaps suggest natural cut regions. A cut through a tall gap
+                    usually preserves meaningful separation.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Compare the cluster count from your chosen cut to the actual scatterplot. Keep
+                    the cut only if the groups are still interpretable in the original space.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>hc &lt;- hclust(dist(scale(df[, vars])), method = "average")
+groups &lt;- cutree(hc, h = 3.2)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-dual">
+              <div class="surface-heading">
+                <span>Interactive cut line</span>
+                <span id="hier-cut-note" class="surface-caption">see the tree and the partition together</span>
+              </div>
+              <div class="split-visuals">
+                <div class="subsurface">
+                  <span class="subsurface-title">Dendrogram</span>
+                  <svg id="hier-cut-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Cut height dendrogram"></svg>
+                </div>
+                <div class="subsurface">
+                  <span class="subsurface-title">Scatter by cut</span>
+                  <svg id="hier-cut-scatter" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Clusters at selected cut height"></svg>
+                </div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Cluster count</span>
+                  <strong id="hier-cut-clusters" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Cut height</span>
+                  <strong id="hier-cut-height-label" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Interpretation</span>
+                  <strong id="hier-cut-story" class="metric-value">broad split</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Linkage</p>
+              <h2>The merging rule changes the tree shape.</h2>
+              <p>
+                Linkage answers a hidden question: when are two multi-point clusters close enough to
+                fuse? Compare complete, single, average, and centroid linkage on the same geometry.
+              </p>
+              <div class="segment-group" id="hier-linkage-controls">
+                <button class="segment is-active" type="button" data-linkage="complete">Complete</button>
+                <button class="segment" type="button" data-linkage="single">Single</button>
+                <button class="segment" type="button" data-linkage="average">Average</button>
+                <button class="segment" type="button" data-linkage="centroid">Centroid</button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Single linkage is prone to chaining. Complete linkage stays conservative. Average
+                    often balances the two. Centroid can create surprising merge order reversals.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Pick the linkage whose implied cluster shape matches the science of the problem,
+                    then verify that the result is stable under small modeling changes.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>hc_complete &lt;- hclust(dist(x), method = "complete")
+hc_single &lt;- hclust(dist(x), method = "single")</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-dual">
+              <div class="surface-heading">
+                <span>Linkage comparison</span>
+                <span id="hier-linkage-note" class="surface-caption">complete keeps groups compact</span>
+              </div>
+              <div class="split-visuals">
+                <div class="subsurface">
+                  <span class="subsurface-title">Scatter</span>
+                  <svg id="hier-linkage-scatter" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Linkage comparison scatter"></svg>
+                </div>
+                <div class="subsurface">
+                  <span class="subsurface-title">Dendrogram</span>
+                  <svg id="hier-linkage-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Linkage comparison dendrogram"></svg>
+                </div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Active linkage</span>
+                  <strong id="hier-linkage-active" class="metric-value">complete</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Tallest merge</span>
+                  <strong id="hier-linkage-height" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Special warning</span>
+                  <strong id="hier-linkage-warning" class="metric-value">none</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Distance Measure</p>
+              <h2>Magnitude and shape are not the same thing.</h2>
+              <p>
+                Here the observations are short profiles rather than scatter points. Euclidean
+                distance groups by raw magnitude. Correlation distance groups by pattern shape,
+                regardless of overall level.
+              </p>
+              <div class="segment-group" id="hier-distance-controls">
+                <button class="segment is-active" type="button" data-distance="euclidean">Euclidean</button>
+                <button class="segment" type="button" data-distance="correlation">Correlation</button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Under correlation distance, parallel profile shapes move together even if one
+                    customer buys much more than another.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Ask whether absolute size or relative pattern matters more in your domain. The
+                    answer should drive the distance metric before you ever draw the tree.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>d_euclid &lt;- dist(x)
+d_corr &lt;- as.dist(1 - cor(t(x)))
+hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-tall">
+              <div class="surface-heading">
+                <span>Magnitude versus shape</span>
+                <span id="hier-distance-note" class="surface-caption">euclidean groups similar amounts</span>
+              </div>
+              <div class="plot-grid plot-grid-tall">
+                <svg id="hier-distance-dendrogram" class="plot plot-small-wide" viewBox="0 0 620 180" role="img" aria-label="Distance measure dendrogram"></svg>
+                <div id="hier-distance-profiles" class="profile-grid" aria-live="polite"></div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Distance</span>
+                  <strong id="hier-distance-active" class="metric-value">euclidean</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Best for</span>
+                  <strong id="hier-distance-story" class="metric-value">magnitude</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Cut shown</span>
+                  <strong class="metric-value">3 clusters</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Scaling</p>
+              <h2>The tree changes when units change.</h2>
+              <p>
+                Hierarchical clustering is just as sensitive to scaling as K-means when Euclidean
+                distance is used. Toggle raw units and scaled values to see how the dendrogram and
+                the recovered groups change together.
+              </p>
+              <div class="segment-group" id="hier-scale-controls">
+                <button class="segment is-active" type="button" data-scale="raw">Raw units</button>
+                <button class="segment" type="button" data-scale="scaled">Scaled</button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    When scaling is off, the widest-range variable controls the earliest merges. The
+                    tree itself shifts because the distance matrix shifts.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    If the unit system is arbitrary, standardize before interpreting branch heights
+                    as meaningful dissimilarities.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>x_raw &lt;- df[, c("socks", "computers")]
+hc_scaled &lt;- hclust(dist(scale(x_raw)), method = "average")</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-dual">
+              <div class="surface-heading">
+                <span>Scaling demo</span>
+                <span id="hier-scale-note" class="surface-caption">raw units emphasize socks</span>
+              </div>
+              <div class="split-visuals">
+                <div class="subsurface">
+                  <span class="subsurface-title">Scatter</span>
+                  <svg id="hier-scale-scatter" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Hierarchical scaling scatter"></svg>
+                </div>
+                <div class="subsurface">
+                  <span class="subsurface-title">Dendrogram</span>
+                  <svg id="hier-scale-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Hierarchical scaling dendrogram"></svg>
+                </div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Distance basis</span>
+                  <strong id="hier-scale-basis" class="metric-value">raw</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Cluster story</span>
+                  <strong id="hier-scale-story" class="metric-value">socks dominate</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Recommended default</span>
+                  <strong class="metric-value">scale first</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Outliers</p>
+              <h2>Outliers appear as lonely, expensive branches.</h2>
+              <p>
+                In a dendrogram, an outlier often stays alone until a very high merge. That can be
+                useful because the tree makes the separation visible, but it can also dominate the
+                final cut decision if you are not careful.
+              </p>
+              <div class="segment-group" id="hier-outlier-controls">
+                <button class="segment is-active" type="button" data-outlier="hide">Without outlier</button>
+                <button class="segment" type="button" data-outlier="show">With outlier</button>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    The outlier’s branch stays isolated until a tall final merge. That height is the
+                    clue that the point does not fit the main structure.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Decide whether the outlier is noise, a rare but valid subgroup, or a signal to
+                    use a different distance measure.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>hc &lt;- hclust(dist(scale(df[, vars])), method = "complete")
+plot(hc)
+rect.hclust(hc, k = 2)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-dual">
+              <div class="surface-heading">
+                <span>Outlier behavior</span>
+                <span id="hier-outlier-note" class="surface-caption">the outlier waits until the end</span>
+              </div>
+              <div class="split-visuals">
+                <div class="subsurface">
+                  <span class="subsurface-title">Scatter</span>
+                  <svg id="hier-outlier-scatter" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Hierarchical outlier scatter"></svg>
+                </div>
+                <div class="subsurface">
+                  <span class="subsurface-title">Dendrogram</span>
+                  <svg id="hier-outlier-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Hierarchical outlier dendrogram"></svg>
+                </div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Final merge height</span>
+                  <strong id="hier-outlier-height" class="metric-value">0</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Practical read</span>
+                  <strong id="hier-outlier-story" class="metric-value">stable</strong>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Singleton risk</span>
+                  <strong id="hier-outlier-singleton" class="metric-value">low</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="chapter reveal">
+            <div class="chapter-copy">
+              <p class="eyebrow">Interpretation</p>
+              <h2>Read the final cut as a nested story.</h2>
+              <p>
+                Use the final cut slider to decide how much detail you want. Each cluster card
+                summarizes the members captured at that height, so you can compare broader families
+                with finer subgroups using the exact same tree.
+              </p>
+              <div class="range-row">
+                <label for="hier-final-slider">Cut height</label>
+                <input id="hier-final-slider" type="range" min="5" max="95" step="1" value="58" />
+                <span id="hier-final-value" class="value-pill">58%</span>
+              </div>
+              <div class="callout-stack">
+                <div class="callout">
+                  <span class="callout-label">What to look at</span>
+                  <p>
+                    Final interpretation comes from the chosen cut and the branch heights above it.
+                    A cluster that fuses late is genuinely more distinct.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Decision to make next</span>
+                  <p>
+                    Translate the members in each branch back to the original variables or entities.
+                    The tree is only useful if the clusters tell a recognizable domain story.
+                  </p>
+                </div>
+                <div class="callout">
+                  <span class="callout-label">Try this in R</span>
+                  <pre><code>groups &lt;- cutree(hc, h = 3.2)
+aggregate(df[, vars], list(cluster = groups), mean)</code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="chapter-visual surface surface-tall">
+              <div class="surface-heading">
+                <span>Interpret your cut</span>
+                <span class="surface-caption">nested structure stays visible</span>
+              </div>
+              <svg id="hier-final-dendrogram" class="plot" viewBox="0 0 620 300" role="img" aria-label="Final hierarchical interpretation"></svg>
+              <div id="hier-final-cluster-cards" class="cluster-card-grid"></div>
+            </div>
+          </section>
+
+          <section class="chapter reveal chapter-checklist">
+            <div class="chapter-copy">
+              <p class="eyebrow">From Demo To Real Data</p>
+              <h2>Carry the same decisions into practice.</h2>
+              <ul class="checklist">
+                <li>Decide whether magnitude or shape is the right notion of similarity.</li>
+                <li>Scale variables before Euclidean distance unless raw units are intentional.</li>
+                <li>Compare linkage rules and keep the one that matches the expected cluster shape.</li>
+                <li>Inspect the dendrogram for large height gaps before choosing a cut.</li>
+                <li>Check whether outliers are forming singleton branches that dominate the tree.</li>
+                <li>Summarize original variables after cutting so the branches become interpretable.</li>
+              </ul>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>Hierarchical R template</span>
+                <span class="surface-caption">compact workflow</span>
+              </div>
+              <pre class="code-panel"><code>x &lt;- scale(df[, vars])
+d &lt;- dist(x)
+hc &lt;- hclust(d, method = "average")
+plot(hc)
+groups &lt;- cutree(hc, h = 3.2)
+aggregate(df[, vars], list(cluster = groups), mean)</code></pre>
+            </div>
+          </section>
+        </article>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
