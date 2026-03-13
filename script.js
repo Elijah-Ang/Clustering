@@ -180,7 +180,15 @@ function kmeansTrace(points, k, seed, maxIterations = 8) {
   const rng = mulberry32(seed);
   const startAssignments = points.map(() => Math.floor(rng() * k));
   const frames = [
-    { title: "Pick group count", step: 0, assignments: null, centroids: [], moved: 0, loop: 0, inertia: null },
+    {
+      title: "Pick how many groups",
+      step: 0,
+      assignments: null,
+      centroids: [],
+      moved: 0,
+      loop: 0,
+      inertia: null,
+    },
     {
       title: "Make a first guess",
       step: 1,
@@ -196,7 +204,7 @@ function kmeansTrace(points, k, seed, maxIterations = 8) {
   let centroids = computeCentroids(points, assignments, k, rng);
 
   frames.push({
-    title: "Find group middles",
+    title: "Find each group middle",
     step: 2,
     assignments: assignments.slice(),
     centroids: centroids.map(clonePoint),
@@ -210,7 +218,7 @@ function kmeansTrace(points, k, seed, maxIterations = 8) {
     const moved = countDifferences(assignments, nextAssignments);
 
     frames.push({
-      title: loop === 1 ? "Move the dots" : "Do it again",
+      title: loop === 1 ? "Move dots to the nearest group" : "Move them again",
       step: 3,
       assignments: nextAssignments.slice(),
       centroids: centroids.map(clonePoint),
@@ -223,7 +231,7 @@ function kmeansTrace(points, k, seed, maxIterations = 8) {
     assignments = nextAssignments.slice();
 
     frames.push({
-      title: moved === 0 ? "Dots stopped moving" : "Do it again",
+      title: moved === 0 ? "Stop when nothing changes" : "Move them again",
       step: 4,
       assignments: assignments.slice(),
       centroids: centroids.map(clonePoint),
@@ -1277,8 +1285,8 @@ function renderKmeansUnsupervised() {
     points: data.kmeansMain,
     assignments: state.kmeansReveal ? previewAssignments : null,
     centroids: state.kmeansReveal ? cache.bestKRuns[3].centroids : [],
-    note: state.kmeansReveal ? "colors appear after the click" : "just gray dots for now",
-    legend: state.kmeansReveal ? "plus sign = group middle" : "no group names yet",
+    note: state.kmeansReveal ? "colors show the groups" : "just gray dots for now",
+    legend: state.kmeansReveal ? "plus sign = group middle" : "no groups yet",
     annotations: state.kmeansReveal
       ? [{ point: cache.bestKRuns[3].centroids[0], text: "group middle", dx: 12, dy: -16 }]
       : [],
@@ -1316,14 +1324,14 @@ function renderAlgorithm() {
       centroids: frame.centroids,
       note:
         frame.step === 0
-          ? "start by picking a group count"
+          ? "start by picking how many groups"
           : frame.step === 1
             ? "the computer makes a first guess"
             : frame.step === 2
               ? "each group gets a middle"
               : frame.moved === 0
-                ? "the dots stopped moving"
-                : "dots move to the nearest middle",
+                ? "nothing is changing now"
+                : "each dot moves to the nearest middle",
       annotations: frame.centroids.length
         ? [{ point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 }]
         : [],
@@ -1366,7 +1374,7 @@ function renderChooseK() {
     lineChartSvg(elbowValues, {
       labels,
       selectedIndex: state.kmeansSelectedK - 1,
-      title: "bend in the line",
+      title: "bend in the line (elbow)",
       color: getCssVar("--accent"),
       annotations: [
         { index: 1, text: "too few groups", dy: -12, align: "start", dx: 4 },
@@ -1380,7 +1388,7 @@ function renderChooseK() {
     lineChartSvg(silhouetteValues, {
       labels: labels.slice(1),
       selectedIndex: Math.max(state.kmeansSelectedK - 2, 0),
-      title: "fit score",
+      title: "how well groups fit",
       color: getCssVar("--accent-alt"),
       minY: Math.min(...silhouetteValues, 0),
       maxY: Math.max(...silhouetteValues, 0.65),
@@ -1393,7 +1401,7 @@ function renderRandomStarts() {
   const best = cache.randomCases[0];
   const improvement = 1 - best.inertia / current.inertia;
 
-  refs["kmeans-random-summary"].textContent = `this try versus the best of ${cache.randomCases.length}`;
+  refs["kmeans-random-summary"].textContent = `one first guess versus the best of ${cache.randomCases.length}`;
   refs["kmeans-random-current-inertia"].textContent = formatNumber(current.inertia, 2);
   refs["kmeans-random-best-inertia"].textContent = formatNumber(best.inertia, 2);
   refs["kmeans-random-gap"].textContent = formatPercent(improvement, 0);
@@ -1408,7 +1416,7 @@ function renderRandomStarts() {
       assignments: current.assignments,
       centroids: current.centroids,
       initialCentroids: current.initialCentroids,
-      note: "one first guess",
+      note: "one starting guess",
       annotations: [{ point: current.initialCentroids[0], text: "first guess", dx: 12, dy: -14 }],
     }),
   );
@@ -1423,8 +1431,8 @@ function renderRandomStarts() {
       assignments: best.assignments,
       centroids: best.centroids,
       initialCentroids: best.initialCentroids,
-      note: "best of many tries",
-      annotations: [{ point: best.centroids[0], text: "better middle", dx: 12, dy: -14 }],
+      note: "best of many starting guesses",
+      annotations: [{ point: best.centroids[0], text: "better answer", dx: 12, dy: -14 }],
     }),
   );
 }
@@ -1509,7 +1517,7 @@ function renderKmeansInterpretation() {
       assignments: diagnostic.run.assignments,
       centroids: diagnostic.run.centroids,
       highlightCluster: state.kmeansFocusCluster,
-      note: `group ${state.kmeansFocusCluster + 1} selected`,
+      note: `reading group ${state.kmeansFocusCluster + 1}`,
       annotations: [
         {
           point: diagnostic.run.centroids[state.kmeansFocusCluster],
@@ -1536,7 +1544,7 @@ function renderKmeansInterpretation() {
           </div>
           <div class="cluster-copy">
             <span>${summary.size} dots</span>
-            <span>middle (${formatNumber(summary.centroid[0], 2)}, ${formatNumber(summary.centroid[1], 2)})</span>
+            <span>group middle (${formatNumber(summary.centroid[0], 2)}, ${formatNumber(summary.centroid[1], 2)})</span>
             <span>width ${formatNumber(summary.spread, 2)}</span>
           </div>
         </button>
@@ -1558,7 +1566,7 @@ function renderHierIntro() {
       cutLabel: "cut here",
       annotations: [
         { screen: [0.08, 0.84], text: "closest dots join first" },
-        { screen: [0.66, 0.18], text: "tree of groups", align: "middle" },
+        { screen: [0.66, 0.18], text: "group tree", align: "middle" },
       ],
     }),
   );
@@ -1573,7 +1581,7 @@ function renderHierMerge() {
   const height = cache.hierAverage.merges[state.hierMergeStep - 1].height;
 
   refs["hier-merge-value"].textContent = String(state.hierMergeStep);
-  refs["hier-merge-note"].textContent = `join ${state.hierMergeStep} of ${maxStep}`;
+  refs["hier-merge-note"].textContent = "higher join = less alike";
   refs["hier-merge-clusters"].textContent = String(groups.length);
   refs["hier-merge-height"].textContent = formatNumber(height, 2);
 
@@ -1598,7 +1606,10 @@ function renderHierMerge() {
       currentStep: state.hierMergeStep,
       assignments,
       labels: data.hierLabels,
-      annotations: [{ screen: [0.1, 0.84], text: "closest dots join first" }],
+      annotations: [
+        { screen: [0.1, 0.84], text: "closest dots join first" },
+        { screen: [0.62, 0.14], text: "higher join = less alike", align: "middle" },
+      ],
     }),
   );
 }
@@ -1613,7 +1624,7 @@ function renderHierCut() {
   const assignments = groupsToAssignments(groups, data.hierMain.length);
 
   refs["hier-cut-value"].textContent = `${state.hierCutPercent}%`;
-  refs["hier-cut-note"].textContent = groups.length <= 3 ? "few big groups" : "many small groups";
+  refs["hier-cut-note"].textContent = groups.length <= 3 ? "high cut = few groups" : "low cut = many groups";
   refs["hier-cut-clusters"].textContent = String(groups.length);
   refs["hier-cut-height-label"].textContent = formatNumber(cutHeight, 2);
   refs["hier-cut-story"].textContent = groups.length <= 3 ? "few big groups" : "many small groups";
@@ -1648,22 +1659,22 @@ function renderHierLinkage() {
   const cutHeight = clustering.maxHeight * 0.48;
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.linkageData.length);
   const noteMap = {
-    complete: "keeps groups tight",
-    single: "can make a chain",
-    average: "middle choice",
-    centroid: "uses group middles",
+    complete: "uses the farthest pair",
+    single: "uses the closest pair",
+    average: "uses the average gap",
+    centroid: "uses the group middle",
   };
   const displayMap = {
-    complete: "tight",
-    single: "chain",
-    average: "middle",
-    centroid: "middle point",
+    complete: "farthest pair",
+    single: "closest pair",
+    average: "average gap",
+    centroid: "group middle",
   };
 
   refs["hier-linkage-note"].textContent = noteMap[state.hierLinkage];
   refs["hier-linkage-active"].textContent = displayMap[state.hierLinkage];
   refs["hier-linkage-height"].textContent = formatNumber(clustering.maxHeight, 2);
-  refs["hier-linkage-warning"].textContent = clustering.inversion ? "order can flip" : "none";
+  refs["hier-linkage-warning"].textContent = clustering.inversion ? "branch order can flip" : "none";
 
   setSvg(
     refs["hier-linkage-scatter"],
@@ -1696,10 +1707,10 @@ function renderHierDistance() {
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.profileData.length);
 
   refs["hier-distance-note"].textContent =
-    state.hierDistance === "euclidean" ? "groups by similar size" : "groups by similar shape";
+    state.hierDistance === "euclidean" ? "close means same size" : "close means same shape";
   refs["hier-distance-active"].textContent = state.hierDistance === "euclidean" ? "same size" : "same shape";
   refs["hier-distance-story"].textContent =
-    state.hierDistance === "euclidean" ? "amount" : "shape";
+    state.hierDistance === "euclidean" ? "how much" : "up-and-down shape";
 
   setSvg(
     refs["hier-distance-dendrogram"],
@@ -1839,7 +1850,7 @@ function renderHierFinal() {
           <div class="cluster-copy">
             <span>${group.length} dots</span>
             <span>members ${group.map((member) => member + 1).join(", ")}</span>
-            <span>middle (${formatNumber(center[0], 2)}, ${formatNumber(center[1], 2)})</span>
+            <span>group middle (${formatNumber(center[0], 2)}, ${formatNumber(center[1], 2)})</span>
           </div>
         </button>
       `;
