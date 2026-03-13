@@ -175,6 +175,63 @@ button {
   display: none;
 }
 
+.start-strip {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  padding-top: 10px;
+}
+
+.start-card {
+  width: min(100%, 880px);
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 18px 20px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  box-shadow: 0 14px 34px rgba(18, 20, 23, 0.05);
+  text-align: center;
+}
+
+.start-steps {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.start-step {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 12px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid var(--line);
+}
+
+.start-step span {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.start-step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 .hero {
   display: grid;
   grid-template-columns: 1fr;
@@ -218,6 +275,8 @@ h2 {
 }
 
 .lede,
+.simple-line,
+.guide-line,
 .chapter-copy p,
 .checklist li {
   color: var(--muted);
@@ -225,12 +284,25 @@ h2 {
   line-height: 1.7;
 }
 
-.lede {
+.lede,
+.guide-line {
   margin: 22px 0 0;
   font-size: clamp(0.98rem, 1.2vw, 1.12rem);
   max-width: 34rem;
   margin-left: auto;
   margin-right: auto;
+}
+
+.simple-line {
+  margin: 16px auto 0;
+  max-width: 30rem;
+  color: var(--text);
+  font-size: clamp(1.02rem, 1.25vw, 1.14rem);
+  line-height: 1.45;
+}
+
+.guide-line {
+  margin-top: 10px;
 }
 
 .hero-pills {
@@ -345,6 +417,14 @@ h2 {
 .chapter-copy p {
   margin: 18px auto 0;
   max-width: 54ch;
+}
+
+.chapter-copy .simple-line {
+  max-width: 38rem;
+}
+
+.chapter-copy .guide-line {
+  max-width: 44rem;
 }
 
 .chapter-visual {
@@ -807,7 +887,8 @@ h2 {
   .metric-grid,
   .split-visuals,
   .plot-grid,
-  .profile-grid {
+  .profile-grid,
+  .start-steps {
     grid-template-columns: 1fr;
   }
 
