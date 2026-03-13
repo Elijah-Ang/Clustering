@@ -1014,6 +1014,80 @@ const heroTrace = kmeansTrace(data.kmeansMain, 3, 30);
 
 const refs = {};
 
+function refineNarrativeLayout() {
+  document.querySelectorAll(".chapter").forEach((chapter) => {
+    const copy = chapter.querySelector(".chapter-copy");
+    const visual = chapter.querySelector(".chapter-visual");
+    if (!copy || !visual) return;
+
+    const controls = Array.from(copy.children).filter((node) => {
+      return (
+        node.classList &&
+        (node.classList.contains("range-row") ||
+          node.classList.contains("control-row") ||
+          node.classList.contains("segment-group"))
+      );
+    });
+
+    if (controls.length) {
+      const controlBand = document.createElement("div");
+      controlBand.className = "visual-controls";
+      const heading = visual.querySelector(".surface-heading");
+      if (heading) {
+        heading.insertAdjacentElement("afterend", controlBand);
+      } else {
+        visual.prepend(controlBand);
+      }
+      controls.forEach((control) => controlBand.appendChild(control));
+    }
+
+    const stack = copy.querySelector(".callout-stack");
+    if (stack) {
+      const callouts = Array.from(stack.querySelectorAll(".callout"));
+      const primary = callouts.find((item) => !item.querySelector("pre")) || callouts[0];
+      const code = callouts.find((item) => item.querySelector("pre"));
+      const supportBand = document.createElement("div");
+      supportBand.className = "support-band";
+
+      if (primary) {
+        const label = primary.querySelector(".callout-label")?.textContent?.trim() || "Note";
+        const body = primary.querySelector("p")?.innerHTML || "";
+        supportBand.insertAdjacentHTML(
+          "beforeend",
+          `
+            <div class="support-note">
+              <span class="support-label">${label}</span>
+              <p>${body}</p>
+            </div>
+          `,
+        );
+      }
+
+      if (code) {
+        supportBand.insertAdjacentHTML(
+          "beforeend",
+          `
+            <details class="r-peek">
+              <summary>Try this in R</summary>
+              ${code.querySelector("pre")?.outerHTML || ""}
+            </details>
+          `,
+        );
+      }
+
+      stack.replaceWith(supportBand);
+    }
+  });
+
+  document.querySelectorAll(".code-panel").forEach((panel) => {
+    const details = document.createElement("details");
+    details.className = "r-peek r-peek-final";
+    details.innerHTML = "<summary>R sketch</summary>";
+    panel.replaceWith(details);
+    details.appendChild(panel);
+  });
+}
+
 function bindElements() {
   [
     "kmeans-hero-plot",
@@ -1876,6 +1950,7 @@ function bindRevealObserver() {
 }
 
 function initialize() {
+  refineNarrativeLayout();
   bindElements();
   bindEvents();
   bindRevealObserver();
