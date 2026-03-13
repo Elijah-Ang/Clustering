@@ -40,10 +40,10 @@
             <div class="hero-copy">
               <p class="eyebrow">K-Means</p>
               <h1>Group the Dots.</h1>
-              <p class="simple-line">The computer is putting similar dots together.</p>
+              <p class="simple-line">These dots have no labels yet.</p>
               <p class="guide-line">
-                Dots that sit near each other become one group. The marked group middle is called a
-                centroid.
+                We are grouping similar dots together. The plus sign marks the group middle. Later
+                we call that middle a centroid.
               </p>
               <p class="try-line"><span>Try this:</span> Watch the dots gather before you touch any controls.</p>
               <div class="hero-pills">
@@ -65,11 +65,11 @@
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">What is clustering?</p>
-              <h2>What Is Clustering?</h2>
+              <h2>Put Similar Dots Together.</h2>
               <p class="simple-line">Clustering means putting similar things together.</p>
               <p class="guide-line">
-                Think of sorting toys into piles that belong together. Here the computer is sorting
-                dots by which ones sit near each other.
+                Think of sorting toys into piles that belong together. Here, dots that sit near
+                each other go into the same group.
               </p>
               <p class="try-line"><span>Try this:</span> Click <strong>Show groups</strong>.</p>
               <div class="control-row">
@@ -87,21 +87,21 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
             </div>
             <div class="chapter-visual surface">
               <div class="surface-heading">
-                <span>Click to group the dots</span>
+                <span>Sort the dots into groups</span>
                 <span class="surface-caption">same dots, now sorted into groups</span>
               </div>
               <svg id="kmeans-unsupervised-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Unsupervised learning reveal"></svg>
               <div class="metric-grid">
                 <div class="metric-card">
-                  <span class="metric-label">Goal</span>
+                  <span class="metric-label">Main idea</span>
                   <strong class="metric-value">keep close dots together</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Uses</span>
+                  <span class="metric-label">Works by</span>
                   <strong class="metric-value">how close dots are</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Works best with</span>
+                  <span class="metric-label">Best shape</span>
                   <strong class="metric-value">roughly round groups</strong>
                 </div>
               </div>
@@ -111,11 +111,11 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">How K-means works</p>
-              <h2>How K-Means Works.</h2>
-              <p class="simple-line">Each dot joins the nearest group middle.</p>
+              <h2>Watch the Group Middles Move.</h2>
+              <p class="simple-line">Each dot goes to the nearest group middle.</p>
               <p class="guide-line">
-                First you pick the number of groups. Then the computer guesses middles, moves dots,
-                moves the middles, and repeats until nothing changes.
+                First you pick how many groups you want. Then the computer guesses the middles,
+                sends each dot to the nearest middle, moves the middles, and repeats.
               </p>
               <p class="try-line"><span>Try this:</span> Press <strong>Next</strong> once, then press <strong>Play</strong>.</p>
               <div class="range-row">
@@ -130,10 +130,10 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               </div>
               <ol class="step-list" id="kmeans-step-list">
                 <li>Pick how many groups</li>
-                <li>Make a first guess</li>
-                <li>Find each group middle</li>
-                <li>Move dots to the nearest group</li>
-                <li>Stop when nothing changes</li>
+                <li>Guess the group middles</li>
+                <li>Each dot joins the nearest middle</li>
+                <li>Move the group middles</li>
+                <li>Repeat until nothing changes</li>
               </ol>
             </div>
             <div class="chapter-visual surface">
@@ -144,15 +144,15 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               <svg id="kmeans-algorithm-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="K-means algorithm loop"></svg>
               <div class="metric-grid">
                 <div class="metric-card">
-                  <span class="metric-label">Dots that moved</span>
+                  <span class="metric-label">Dots that switched</span>
                   <strong id="kmeans-algorithm-moved" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Total spread</span>
+                  <span class="metric-label">How spread out</span>
                   <strong id="kmeans-algorithm-inertia" class="metric-value">-</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Loop number</span>
+                  <span class="metric-label">Round number</span>
                   <strong id="kmeans-algorithm-loop" class="metric-value">0</strong>
                 </div>
               </div>
@@ -162,11 +162,11 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">Pick the number of groups</p>
-              <h2>Pick the Number of Groups.</h2>
-              <p class="simple-line">Too few groups mix different dots together.</p>
+              <h2>Pick How Many Groups.</h2>
+              <p class="simple-line">Too few groups mix dots together. Too many split one group into little pieces.</p>
               <p class="guide-line">
-                Too many groups split one real group into many tiny pieces. Use the picture first.
-                The bend in the helper line is only a helper.
+                Look at the picture first. A helper line can support you, but the main question is
+                whether the groups look clear and believable.
               </p>
               <p class="try-line"><span>Try this:</span> Move K until the big picture looks simple.</p>
               <div class="range-row">
@@ -195,11 +195,11 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               </div>
               <div class="metric-grid">
                 <div class="metric-card">
-                  <span class="metric-label">Spread</span>
+                  <span class="metric-label">Spread out</span>
                   <strong id="kmeans-k-inertia" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Fit score</span>
+                  <span class="metric-label">Groups stay apart</span>
                   <strong id="kmeans-k-silhouette" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
@@ -213,11 +213,11 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">Try more than once</p>
-              <h2>Why Try More Than Once?</h2>
+              <h2>A Bad First Guess Can Give a Bad Grouping.</h2>
               <p class="simple-line">A bad first guess can give a bad answer.</p>
               <p class="guide-line">
-                K-means starts from random places. If the first guess is poor, the final groups can
-                also be poor, so we try many starts and keep the best one.
+                K-means begins with a first guess for the group middles. Different first guesses
+                can lead to different final groups, so we try many and keep the best answer.
               </p>
               <p class="try-line"><span>Try this:</span> Click <strong>Try a new start</strong> a few times.</p>
               <div class="control-row">
@@ -233,26 +233,26 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
             </div>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
-                <span>Bad first guess vs better answer</span>
+                <span>Bad start vs better start</span>
                 <span id="kmeans-random-summary" class="surface-caption">same dots, different starting guesses</span>
               </div>
               <div class="split-visuals">
                 <div class="subsurface">
-                  <span class="subsurface-title">One try</span>
+                  <span class="subsurface-title">Bad start</span>
                   <svg id="kmeans-random-current" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Current random start solution"></svg>
                 </div>
                 <div class="subsurface">
-                  <span class="subsurface-title">Best try</span>
+                  <span class="subsurface-title">Better start</span>
                   <svg id="kmeans-random-best" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Best random start solution"></svg>
                 </div>
               </div>
               <div class="metric-grid">
                 <div class="metric-card">
-                  <span class="metric-label">This spread</span>
+                  <span class="metric-label">This try</span>
                   <strong id="kmeans-random-current-inertia" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Best spread</span>
+                  <span class="metric-label">Best try</span>
                   <strong id="kmeans-random-best-inertia" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
@@ -269,8 +269,8 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               <h2>Make Numbers Fair.</h2>
               <p class="simple-line">Big numbers can drown out small numbers.</p>
               <p class="guide-line">
-                If one axis uses much bigger numbers, it can take over even when it should not.
-                Scaling makes both axes matter more fairly.
+                If one side uses much bigger numbers, that side can boss the grouping around.
+                Scaling gives both sides a fairer say.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between <strong>Original numbers</strong> and <strong>Scaled numbers</strong>.</p>
               <div class="segment-group" id="kmeans-scale-controls">
@@ -304,11 +304,11 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">Weird points</p>
-              <h2>Weird Points Can Pull a Group.</h2>
-              <p class="simple-line">One far dot can tug the group middle away.</p>
+              <h2>One Weird Point Pulls the Middle.</h2>
+              <p class="simple-line">One far dot can tug the middle away.</p>
               <p class="guide-line">
-                Because every dot must join some group, one lonely point can drag the middle away
-                from the main pile.
+                Every dot still has to join a group. That means one lonely point can drag the
+                group middle away from the main pile.
               </p>
               <p class="try-line"><span>Try this:</span> Show the weird point.</p>
               <div class="segment-group" id="kmeans-outlier-controls">
@@ -343,10 +343,10 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
             <div class="chapter-copy">
               <p class="eyebrow">Describe the groups</p>
               <h2>Describe the Groups.</h2>
-              <p class="simple-line">A group helps only if you can say what makes it special.</p>
+              <p class="simple-line">A group matters only if you can describe it simply.</p>
               <p class="guide-line">
-                After the picture looks good, read each group in plain words. What is bigger,
-                smaller, common, or different in that group?
+                After the picture looks good, say what is special about each group in plain words.
+                Ask what these dots have in common.
               </p>
               <p class="try-line"><span>Try this:</span> Click each group card and describe it in one sentence.</p>
               <div class="callout-stack">
@@ -359,7 +359,7 @@ aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
             </div>
             <div class="chapter-visual surface surface-tall">
               <div class="surface-heading">
-                <span>Click a group to describe it</span>
+                <span>Click a group and name it</span>
                 <span class="surface-caption">one group at a time</span>
               </div>
               <svg id="kmeans-final-plot" class="plot" viewBox="0 0 620 340" role="img" aria-label="Final K-means interpretation"></svg>
@@ -370,11 +370,11 @@ aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
           <section class="chapter reveal chapter-checklist">
             <div class="chapter-copy">
               <p class="eyebrow">For real data</p>
-              <h2>For Real Data.</h2>
-              <p class="simple-line">Use the same simple checks before you trust the groups.</p>
+              <h2>Use This on Real Data.</h2>
+              <p class="simple-line">Do these short checks before you trust the answer.</p>
               <p class="guide-line">
-                Make the numbers fair, try a few group counts, rerun from many starts, look for
-                weird points, and then describe the final groups in plain words.
+                Go in this order: make the numbers fair, try a few group counts, rerun from many
+                starts, check for weird points, then describe the groups.
               </p>
               <p class="try-line"><span>Try this:</span> Work through the checklist from top to bottom.</p>
               <ul class="checklist">
@@ -418,8 +418,8 @@ aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
               <h1>Build a Group Tree.</h1>
               <p class="simple-line">Dots join into bigger and bigger groups.</p>
               <p class="guide-line">
-                Each dot starts alone. Close dots join first, then groups join other groups, and
-                the tree keeps growing.
+                Each dot starts alone. Close dots join first. Then small groups join into bigger
+                groups and the tree keeps growing.
               </p>
               <p class="try-line"><span>Try this:</span> Watch the tree grow before you touch anything.</p>
               <div class="hero-pills">
@@ -441,7 +441,7 @@ aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">What this method does</p>
-              <h2>What This Method Does.</h2>
+              <h2>Each Dot Starts Alone.</h2>
               <p class="simple-line">Each dot starts alone, then close dots join.</p>
               <p class="guide-line">
                 The joins keep going until everything is connected. Later you decide where to cut
@@ -468,11 +468,11 @@ plot(hc)</code></pre>
                   <strong class="metric-value">one point each</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Build</span>
+                  <span class="metric-label">Build it</span>
                   <strong class="metric-value">bottom up</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Pick groups</span>
+                  <span class="metric-label">Choose groups</span>
                   <strong class="metric-value">after plotting</strong>
                 </div>
               </div>
@@ -483,9 +483,10 @@ plot(hc)</code></pre>
             <div class="chapter-copy">
               <p class="eyebrow">Read the tree</p>
               <h2>Read the Group Tree.</h2>
-              <p class="simple-line">Closer dots join earlier.</p>
+              <p class="simple-line">The closest dots join first.</p>
               <p class="guide-line">
-                Higher joins mean the groups were less alike. This picture is called a dendrogram.
+                Higher joins mean the groups were less alike. This picture is called a dendrogram,
+                but first just read it as a group tree.
               </p>
               <p class="try-line"><span>Try this:</span> Move the join step slider and watch which dots join first.</p>
               <div class="range-row">
@@ -496,7 +497,7 @@ plot(hc)</code></pre>
             </div>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
-                <span>Watch the joins</span>
+                <span>Watch who joins first</span>
                 <span id="hier-merge-note" class="surface-caption">higher join = less alike</span>
               </div>
               <div class="split-visuals">
@@ -515,12 +516,12 @@ plot(hc)</code></pre>
                   <strong id="hier-merge-clusters" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Join height</span>
+                  <span class="metric-label">Join level</span>
                   <strong id="hier-merge-height" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Read this by</span>
-                  <strong class="metric-value">height</strong>
+                  <span class="metric-label">Higher means</span>
+                  <strong class="metric-value">less alike</strong>
                 </div>
               </div>
             </div>
@@ -532,7 +533,7 @@ plot(hc)</code></pre>
               <h2>Cut the Tree to Make Groups.</h2>
               <p class="simple-line">A high cut makes a few big groups.</p>
               <p class="guide-line">
-                A low cut makes more small groups. Move the cut line until the answer feels simple
+                A low cut makes more small groups. Move the cut line until the picture feels simple
                 and believable.
               </p>
               <p class="try-line"><span>Try this:</span> Slide the cut line up and down.</p>
@@ -587,8 +588,8 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
               <h2>How Groups Choose to Join.</h2>
               <p class="simple-line">Groups can join by the closest pair, average closeness, or farthest pair.</p>
               <p class="guide-line">
-                Different join rules can make different trees, so switch the rule and watch the
-                shape change.
+                The tree changes because the rule for joining changes. Switch the rule and watch
+                the shape change.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between closest pair, average closeness, and farthest pair.</p>
               <div class="segment-group" id="hier-linkage-controls">
@@ -623,8 +624,8 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
                   <strong id="hier-linkage-height" class="metric-value">0</strong>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Watch out</span>
-                  <strong id="hier-linkage-warning" class="metric-value">none</strong>
+                  <span class="metric-label">Tree feel</span>
+                  <strong id="hier-linkage-warning" class="metric-value">balanced</strong>
                 </div>
               </div>
             </div>
@@ -636,8 +637,8 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
               <h2>What Does Close Mean?</h2>
               <p class="simple-line">Things can be close by size or close by pattern.</p>
               <p class="guide-line">
-                First decide what kind of closeness matters. Then the technical names are Euclidean
-                distance for size and correlation distance for pattern.
+                First decide what kind of closeness matters. Then the technical names are
+                Euclidean distance for size and correlation distance for pattern.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between <strong>Same size</strong> and <strong>Same pattern</strong>.</p>
               <div class="segment-group" id="hier-distance-controls">
@@ -696,7 +697,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
             </div>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
-                <span>Same dots, fairer numbers</span>
+                <span>Before scaling and after scaling</span>
                 <span id="hier-scale-note" class="surface-caption">watch the tree rearrange</span>
               </div>
               <div class="split-visuals">
@@ -732,7 +733,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
               <h2>Weird Points Stay Alone.</h2>
               <p class="simple-line">A far dot can stay alone for a long time.</p>
               <p class="guide-line">
-                A weird point often waits until the end to join, so the tree shows it as a lonely
+                A weird point often waits until the end to join. The tree shows this as a lonely
                 branch.
               </p>
               <p class="try-line"><span>Try this:</span> Show the weird point.</p>
@@ -776,7 +777,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">Describe the final groups</p>
-              <h2>Describe the Final Groups.</h2>
+              <h2>What Do These Groups Mean?</h2>
               <p class="simple-line">After you cut the tree, ask what each group means.</p>
               <p class="guide-line">
                 A useful result is not just a pretty tree. It gives groups you can describe in
@@ -809,8 +810,8 @@ aggregate(df[, vars], list(cluster = groups), mean)</code></pre>
           <section class="chapter reveal chapter-checklist">
             <div class="chapter-copy">
               <p class="eyebrow">For real data</p>
-              <h2>For Real Data.</h2>
-              <p class="simple-line">Choose what close means before you trust the tree.</p>
+              <h2>Use This on Real Data.</h2>
+              <p class="simple-line">Do these short checks before you trust the tree.</p>
               <p class="guide-line">
                 Decide what close means, make the numbers fair, compare a few join rules, pick a
                 cut, and describe the final groups in plain words.

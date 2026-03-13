@@ -387,11 +387,11 @@ h2 {
 }
 
 .surface-tall {
-  min-height: 820px;
+  min-height: 860px;
 }
 
 .surface-dual {
-  min-height: 720px;
+  min-height: 760px;
 }
 
 .surface-heading {
@@ -678,11 +678,11 @@ h2 {
 }
 
 .plot-small-wide {
-  min-height: 220px;
+  min-height: 240px;
 }
 
 .plot-half {
-  min-height: 380px;
+  min-height: 420px;
 }
 
 .metric-grid {

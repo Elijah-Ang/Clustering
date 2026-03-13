@@ -327,6 +327,19 @@ function clusterSummaries(points, assignments) {
   });
 }
 
+function describeScatterRegion(point) {
+  const [x, y] = point;
+  if (y > 1.35) return "top dots";
+  if (x < -1.25) return "left-side dots";
+  if (x > 1.25) return "right-side dots";
+  if (y < -0.95) return "lower dots";
+  return "middle dots";
+}
+
+function describeSpreadPlain(spread) {
+  return spread < 0.85 ? "dots stay fairly close" : "dots spread wider";
+}
+
 function hierarchicalClustering(points, options) {
   const linkage = options.linkage || "average";
   const distanceKind = options.distance || "euclidean";
@@ -1285,11 +1298,15 @@ function renderKmeansUnsupervised() {
     points: data.kmeansMain,
     assignments: state.kmeansReveal ? previewAssignments : null,
     centroids: state.kmeansReveal ? cache.bestKRuns[3].centroids : [],
-    note: state.kmeansReveal ? "colors show the groups" : "gray dots only",
+    note: state.kmeansReveal ? "near dots become one group" : "gray dots with no labels",
     legend: state.kmeansReveal ? "plus sign = group middle" : "no groups yet",
     annotations: state.kmeansReveal
-      ? [{ point: cache.bestKRuns[3].centroids[0], text: "group middle", dx: 12, dy: -16 }]
-      : [],
+      ? [
+          { point: cache.bestKRuns[3].centroids[0], text: "group middle", dx: 12, dy: -16 },
+          { screen: [0.14, 0.16], text: "same kind", color: getCssVar("--accent-alt") },
+          { screen: [0.68, 0.22], text: "grouped together" },
+        ]
+      : [{ screen: [0.12, 0.16], text: "no labels yet", color: getCssVar("--accent-alt") }],
   });
   setSvg(refs["kmeans-unsupervised-plot"], markup);
   refs["kmeans-unsupervised-toggle"].textContent = state.kmeansReveal ? "Hide groups" : "Show groups";
@@ -1303,6 +1320,7 @@ function renderAlgorithm() {
   const trace = getAlgorithmTrace();
   state.kmeansAlgorithm.step = Math.min(state.kmeansAlgorithm.step, trace.frames.length - 1);
   const frame = trace.frames[state.kmeansAlgorithm.step];
+  const previousFrame = state.kmeansAlgorithm.step > 0 ? trace.frames[state.kmeansAlgorithm.step - 1] : null;
 
   refs["kmeans-algorithm-k-value"].textContent = String(state.kmeansAlgorithm.k);
   refs["kmeans-algorithm-title"].textContent = frame.title;
@@ -1322,19 +1340,40 @@ function renderAlgorithm() {
       points: data.kmeansMain,
       assignments: frame.assignments,
       centroids: frame.centroids,
+      ghostCentroids: frame.step === 4 && previousFrame?.centroids?.length ? previousFrame.centroids : [],
       note:
         frame.step === 0
           ? "start by picking how many groups"
           : frame.step === 1
             ? "the computer makes a first guess"
             : frame.step === 2
-              ? "each group gets a new middle"
+              ? "the first middles appear"
               : frame.moved === 0
                 ? "nothing is changing now"
                 : "each dot moves to the nearest middle",
-      annotations: frame.centroids.length
-        ? [{ point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 }]
-        : [],
+      annotations:
+        frame.step === 0
+          ? [{ screen: [0.12, 0.16], text: "pick K first", color: getCssVar("--accent-alt") }]
+          : frame.step === 1
+            ? [{ screen: [0.12, 0.16], text: "first guess", color: getCssVar("--accent-alt") }]
+            : frame.step === 2
+              ? [
+                  { point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 },
+                  { screen: [0.58, 0.16], text: "guess the middles", color: getCssVar("--accent-alt") },
+                ]
+              : frame.step === 3
+                ? [
+                    { point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 },
+                    { screen: [0.58, 0.16], text: "nearest group", color: getCssVar("--accent-alt") },
+                  ]
+                : previousFrame?.centroids?.length
+                  ? [
+                      { point: previousFrame.centroids[0], text: "old middle", dx: -60, dy: -16, color: getCssVar("--accent-alt") },
+                      { point: frame.centroids[0], text: "new middle", dx: 14, dy: 18 },
+                    ]
+                  : frame.centroids.length
+                    ? [{ point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 }]
+                    : [],
     }),
   );
 }
@@ -1362,10 +1401,26 @@ function renderChooseK() {
       note:
         state.kmeansSelectedK <= 2
           ? "this may be too few groups"
-          : state.kmeansSelectedK >= 6
+          : state.kmeansSelectedK >= 5
             ? "this may be too many groups"
             : "this may be about right",
-      annotations: [{ point: diagnostic.run.centroids[0], text: "group middle", dx: 12, dy: -16 }],
+      annotations: [
+        { point: diagnostic.run.centroids[0], text: "group middle", dx: 12, dy: -16 },
+        ...(state.kmeansSelectedK <= 2
+          ? [
+              { screen: [0.12, 0.16], text: "too few groups", color: getCssVar("--accent-alt") },
+              { screen: [0.62, 0.78], text: "mixed together" },
+            ]
+          : state.kmeansSelectedK >= 5
+            ? [
+                { screen: [0.64, 0.16], text: "too many groups", color: getCssVar("--accent-alt") },
+                { screen: [0.58, 0.78], text: "split apart" },
+              ]
+            : [
+                { screen: [0.42, 0.16], text: "about right", color: getCssVar("--accent-alt") },
+                { screen: [0.64, 0.78], text: "good grouping" },
+              ]),
+      ],
     }),
   );
 
@@ -1374,7 +1429,7 @@ function renderChooseK() {
     lineChartSvg(elbowValues, {
       labels,
       selectedIndex: state.kmeansSelectedK - 1,
-      title: "bend in the line (elbow)",
+      title: "bend in the line (helper)",
       color: getCssVar("--accent"),
       annotations: [
         { index: 1, text: "too few groups", dy: -12, align: "start", dx: 4 },
@@ -1388,7 +1443,7 @@ function renderChooseK() {
     lineChartSvg(silhouetteValues, {
       labels: labels.slice(1),
       selectedIndex: Math.max(state.kmeansSelectedK - 2, 0),
-      title: "how well groups fit",
+      title: "helper score",
       color: getCssVar("--accent-alt"),
       minY: Math.min(...silhouetteValues, 0),
       maxY: Math.max(...silhouetteValues, 0.65),
@@ -1401,7 +1456,7 @@ function renderRandomStarts() {
   const best = cache.randomCases[0];
   const improvement = 1 - best.inertia / current.inertia;
 
-  refs["kmeans-random-summary"].textContent = `one first guess versus the best of ${cache.randomCases.length}`;
+  refs["kmeans-random-summary"].textContent = `bad start versus best of ${cache.randomCases.length} tries`;
   refs["kmeans-random-current-inertia"].textContent = formatNumber(current.inertia, 2);
   refs["kmeans-random-best-inertia"].textContent = formatNumber(best.inertia, 2);
   refs["kmeans-random-gap"].textContent = formatPercent(improvement, 0);
@@ -1417,7 +1472,7 @@ function renderRandomStarts() {
       centroids: current.centroids,
       initialCentroids: current.initialCentroids,
       note: "one starting guess",
-      annotations: [{ point: current.initialCentroids[0], text: "first guess", dx: 12, dy: -14 }],
+      annotations: [{ point: current.initialCentroids[0], text: "bad start", dx: 12, dy: -14, color: getCssVar("--accent-alt") }],
     }),
   );
 
@@ -1432,7 +1487,10 @@ function renderRandomStarts() {
       centroids: best.centroids,
       initialCentroids: best.initialCentroids,
       note: "best of many starting guesses",
-      annotations: [{ point: best.centroids[0], text: "better answer", dx: 12, dy: -14 }],
+      annotations: [
+        { point: best.initialCentroids[0], text: "better start", dx: 12, dy: -14, color: getCssVar("--accent-alt") },
+        { screen: [0.5, 0.14], text: "keep the better answer" },
+      ],
     }),
   );
 }
@@ -1444,10 +1502,10 @@ function renderScaleDemo() {
   const centroids = clusterSummaries(data.scaleData, assignments).map((summary) => summary.centroid);
 
   refs["kmeans-scale-note"].textContent =
-    state.kmeansScaleMode === "raw" ? "big numbers win" : "numbers are fairer now";
+    state.kmeansScaleMode === "raw" ? "big numbers dominate" : "fairer comparison";
   refs["kmeans-scale-basis"].textContent = state.kmeansScaleMode === "raw" ? "original" : "scaled";
   refs["kmeans-scale-story"].textContent =
-    state.kmeansScaleMode === "raw" ? "sock count wins" : "both sides count";
+    state.kmeansScaleMode === "raw" ? "big numbers dominate" : "fairer comparison";
 
   setSvg(
     refs["kmeans-scale-plot"],
@@ -1456,11 +1514,11 @@ function renderScaleDemo() {
       assignments,
       centroids,
       axes: { xLabel: "Socks", yLabel: "Computers" },
-      note: state.kmeansScaleMode === "raw" ? "big numbers win" : "numbers are fairer now",
+      note: state.kmeansScaleMode === "raw" ? "big numbers dominate" : "fairer comparison",
       annotations: [
         {
           screen: [0.62, 0.14],
-          text: state.kmeansScaleMode === "raw" ? "big numbers win" : "numbers are fairer",
+          text: state.kmeansScaleMode === "raw" ? "big numbers dominate" : "fairer comparison",
         },
       ],
     }),
@@ -1496,7 +1554,11 @@ function renderOutlierDemo() {
       outlierText: "weird point",
       note: showOutlier ? "dashed mark = old middle" : "watch the group middle",
       annotations: showOutlier
-        ? [{ point: run.centroids[1], text: "group middle", dx: 12, dy: -16 }]
+        ? [
+            { point: baseRun.centroids[1], text: "old middle", dx: -58, dy: -16, color: getCssVar("--accent-alt") },
+            { point: run.centroids[1], text: "new middle", dx: 12, dy: 18 },
+            { screen: [0.54, 0.14], text: "group middle pulled away" },
+          ]
         : [{ point: run.centroids[1], text: "group middle", dx: 12, dy: -16 }],
     }),
   );
@@ -1506,6 +1568,8 @@ function renderKmeansInterpretation() {
   const diagnostic = cache.kDiagnostics[state.kmeansSelectedK - 1];
   const summaries = diagnostic.summaries;
   state.kmeansFocusCluster = Math.min(state.kmeansFocusCluster, summaries.length - 1);
+  const focusSummary = summaries[state.kmeansFocusCluster];
+  const focusLabel = describeScatterRegion(focusSummary.centroid);
 
   setSvg(
     refs["kmeans-final-plot"],
@@ -1517,13 +1581,18 @@ function renderKmeansInterpretation() {
       assignments: diagnostic.run.assignments,
       centroids: diagnostic.run.centroids,
       highlightCluster: state.kmeansFocusCluster,
-      note: `reading group ${state.kmeansFocusCluster + 1}`,
+      note: `reading ${focusLabel}`,
       annotations: [
         {
           point: diagnostic.run.centroids[state.kmeansFocusCluster],
           text: "group middle",
           dx: 12,
           dy: -16,
+        },
+        {
+          screen: [0.66, 0.16],
+          text: focusLabel,
+          color: getCssVar("--accent-alt"),
         },
       ],
     }),
@@ -1544,8 +1613,8 @@ function renderKmeansInterpretation() {
           </div>
           <div class="cluster-copy">
             <span>${summary.size} dots</span>
-            <span>group middle (${formatNumber(summary.centroid[0], 2)}, ${formatNumber(summary.centroid[1], 2)})</span>
-            <span>width ${formatNumber(summary.spread, 2)}</span>
+            <span>${describeScatterRegion(summary.centroid)}</span>
+            <span>${describeSpreadPlain(summary.spread)}</span>
           </div>
         </button>
       `;
@@ -1565,8 +1634,9 @@ function renderHierIntro() {
       labels: data.hierLabels,
       cutLabel: "cut here",
       annotations: [
-        { screen: [0.08, 0.84], text: "closest dots join first" },
-        { screen: [0.66, 0.18], text: "group tree", align: "middle" },
+        { screen: [0.08, 0.84], text: "small groups" },
+        { screen: [0.46, 0.52], text: "bigger groups", align: "middle", color: getCssVar("--accent-alt") },
+        { screen: [0.72, 0.18], text: "group tree", align: "middle" },
       ],
     }),
   );
@@ -1594,6 +1664,10 @@ function renderHierMerge() {
       points: data.hierMain,
       assignments,
       note: `${groups.length} groups left`,
+      annotations: [
+        { screen: [0.08, 0.8], text: "joins first" },
+        { screen: [0.62, 0.2], text: "joins later", color: getCssVar("--accent-alt") },
+      ],
     }),
   );
 
@@ -1607,8 +1681,9 @@ function renderHierMerge() {
       assignments,
       labels: data.hierLabels,
       annotations: [
-        { screen: [0.1, 0.84], text: "closest dots join first" },
-        { screen: [0.62, 0.14], text: "higher join = less alike", align: "middle" },
+        { screen: [0.08, 0.84], text: "joins first" },
+        { screen: [0.58, 0.26], text: "joins later", color: getCssVar("--accent-alt"), align: "middle" },
+        { screen: [0.62, 0.14], text: "higher = less alike", align: "middle" },
       ],
     }),
   );
@@ -1624,10 +1699,12 @@ function renderHierCut() {
   const assignments = groupsToAssignments(groups, data.hierMain.length);
 
   refs["hier-cut-value"].textContent = `${state.hierCutPercent}%`;
-  refs["hier-cut-note"].textContent = groups.length <= 3 ? "high cut = few groups" : "low cut = many groups";
+  refs["hier-cut-note"].textContent =
+    groups.length <= 3 ? "cut high = fewer big groups" : "cut low = more small groups";
   refs["hier-cut-clusters"].textContent = String(groups.length);
   refs["hier-cut-height-label"].textContent = formatNumber(cutHeight, 2);
-  refs["hier-cut-story"].textContent = groups.length <= 3 ? "few big groups" : "many small groups";
+  refs["hier-cut-story"].textContent =
+    groups.length <= 2 ? "one big group" : groups.length >= 5 ? "many small groups" : "few big groups";
 
   setSvg(
     refs["hier-cut-dendrogram"],
@@ -1638,6 +1715,12 @@ function renderHierCut() {
       assignments,
       labels: data.hierLabels,
       cutLabel: "cut here",
+      annotations: [
+        {
+          screen: [0.08, 0.16],
+          text: groups.length <= 3 ? "cut high = fewer big groups" : "cut low = more small groups",
+        },
+      ],
     }),
   );
 
@@ -1650,6 +1733,14 @@ function renderHierCut() {
       points: data.hierMain,
       assignments,
       note: `${groups.length} groups at this cut`,
+      annotations: [
+        {
+          screen: [0.52, 0.16],
+          text:
+            groups.length <= 2 ? "one big group" : groups.length >= 5 ? "many small groups" : "few big groups",
+          color: getCssVar("--accent-alt"),
+        },
+      ],
     }),
   );
 }
@@ -1659,10 +1750,10 @@ function renderHierLinkage() {
   const cutHeight = clustering.maxHeight * 0.48;
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.linkageData.length);
   const noteMap = {
-    single: "uses the closest pair",
-    average: "uses average closeness",
-    complete: "uses the farthest pair",
-    centroid: "uses the group middle",
+    single: "closest pair",
+    average: "average closeness",
+    complete: "farthest pair",
+    centroid: "group middle",
   };
   const displayMap = {
     single: "closest pair",
@@ -1670,11 +1761,17 @@ function renderHierLinkage() {
     complete: "farthest pair",
     centroid: "group middle",
   };
+  const feelMap = {
+    single: "chains easily",
+    average: "balanced",
+    complete: "stays tight",
+    centroid: "follows middles",
+  };
 
-  refs["hier-linkage-note"].textContent = noteMap[state.hierLinkage];
+  refs["hier-linkage-note"].textContent = `${noteMap[state.hierLinkage]} decides each join`;
   refs["hier-linkage-active"].textContent = displayMap[state.hierLinkage];
   refs["hier-linkage-height"].textContent = formatNumber(clustering.maxHeight, 2);
-  refs["hier-linkage-warning"].textContent = clustering.inversion ? "branch order can flip" : "none";
+  refs["hier-linkage-warning"].textContent = feelMap[state.hierLinkage];
 
   setSvg(
     refs["hier-linkage-scatter"],
@@ -1685,6 +1782,7 @@ function renderHierLinkage() {
       points: data.linkageData,
       assignments,
       note: noteMap[state.hierLinkage],
+      annotations: [{ screen: [0.08, 0.16], text: noteMap[state.hierLinkage], color: getCssVar("--accent-alt") }],
     }),
   );
 
@@ -1710,7 +1808,7 @@ function renderHierDistance() {
     state.hierDistance === "euclidean" ? "close means same size" : "close means same pattern";
   refs["hier-distance-active"].textContent = state.hierDistance === "euclidean" ? "same size" : "same pattern";
   refs["hier-distance-story"].textContent =
-    state.hierDistance === "euclidean" ? "how much there is" : "up-and-down pattern";
+    state.hierDistance === "euclidean" ? "looks at size first" : "looks at shape first";
 
   setSvg(
     refs["hier-distance-dendrogram"],
@@ -1726,6 +1824,12 @@ function renderHierDistance() {
           screen: [0.14, 0.18],
           text: state.hierDistance === "euclidean" ? "same size" : "same pattern",
         },
+        {
+          screen: [0.62, 0.18],
+          text: state.hierDistance === "euclidean" ? "how much there is" : "up-and-down shape",
+          color: getCssVar("--accent-alt"),
+          align: "middle",
+        },
       ],
     }),
   );
@@ -1738,10 +1842,10 @@ function renderHierScale() {
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.scaleData.length);
 
   refs["hier-scale-note"].textContent =
-    state.hierScaleMode === "raw" ? "big numbers take over" : "numbers are fairer now";
+    state.hierScaleMode === "raw" ? "big numbers dominate" : "fairer tree";
   refs["hier-scale-basis"].textContent = state.hierScaleMode === "raw" ? "original" : "scaled";
   refs["hier-scale-story"].textContent =
-    state.hierScaleMode === "raw" ? "sock count wins" : "both sides count";
+    state.hierScaleMode === "raw" ? "big numbers dominate" : "fairer comparison";
 
   setSvg(
     refs["hier-scale-scatter"],
@@ -1752,7 +1856,14 @@ function renderHierScale() {
       points: data.scaleData,
       assignments,
       axes: { xLabel: "Socks", yLabel: "Computers" },
-      note: state.hierScaleMode === "raw" ? "big numbers win" : "numbers are fairer now",
+      note: state.hierScaleMode === "raw" ? "big numbers dominate" : "fairer comparison",
+      annotations: [
+        {
+          screen: [0.54, 0.16],
+          text: state.hierScaleMode === "raw" ? "big numbers dominate" : "fairer comparison",
+          color: getCssVar("--accent-alt"),
+        },
+      ],
     }),
   );
   setSvg(
@@ -1763,6 +1874,12 @@ function renderHierScale() {
       cutHeight,
       assignments,
       cutLabel: "cut here",
+      annotations: [
+        {
+          screen: [0.08, 0.16],
+          text: state.hierScaleMode === "raw" ? "big numbers dominate" : "fairer tree",
+        },
+      ],
     }),
   );
 }
@@ -1793,6 +1910,7 @@ function renderHierOutlier() {
       outlierIndex: showOutlier ? points.length - 1 : null,
       outlierPoint: showOutlier ? data.outlierPoint : null,
       outlierText: "weird point",
+      annotations: showOutlier ? [{ screen: [0.54, 0.16], text: "joins last", color: getCssVar("--accent-alt") }] : [],
     }),
   );
   setSvg(
@@ -1803,7 +1921,12 @@ function renderHierOutlier() {
       cutHeight,
       assignments,
       cutLabel: "cut here",
-      annotations: showOutlier ? [{ screen: [0.54, 0.12], text: "weird point waits" }] : [],
+      annotations: showOutlier
+        ? [
+            { screen: [0.48, 0.12], text: "lonely branch" },
+            { screen: [0.72, 0.22], text: "joins last", color: getCssVar("--accent-alt") },
+          ]
+        : [],
     }),
   );
 }
@@ -1811,28 +1934,41 @@ function renderHierOutlier() {
 function renderHierFinal() {
   const cutHeight = cutHeightFromPercent(cache.hierAverage, state.hierFinalPercent);
   const groups = cutTree(cache.hierAverage.root, cutHeight);
-  const assignments = groupsToAssignments(groups, data.hierMain.length);
-  state.hierFocusCluster = Math.min(state.hierFocusCluster, groups.length - 1);
+  const orderedGroups = groups.slice().sort((left, right) => Math.min(...left) - Math.min(...right));
+  const assignments = groupsToAssignments(orderedGroups, data.hierMain.length);
+  state.hierFocusCluster = Math.min(state.hierFocusCluster, orderedGroups.length - 1);
+  const width = 620;
+  const height = 300;
+  const layout = layoutDendrogram(cache.hierAverage.root, width, height, 28);
+  const groupAnnotations = orderedGroups.map((group, index) => {
+    const xs = group.map((member) => layout.positions.get(member).x);
+    const averageX = xs.reduce((sum, x) => sum + x, 0) / xs.length;
+    const center = meanPoint(group.map((member) => data.hierMain[member]));
+    return {
+      screen: [(averageX - layout.padding) / (width - layout.padding * 2), 0.86],
+      text: describeScatterRegion(center),
+      align: "middle",
+      color: index === state.hierFocusCluster ? getCssVar("--accent-alt") : getCssVar("--accent"),
+    };
+  });
 
   refs["hier-final-value"].textContent = `${state.hierFinalPercent}%`;
 
   setSvg(
     refs["hier-final-dendrogram"],
     dendrogramSvg(cache.hierAverage, {
-      width: 620,
-      height: 300,
+      width,
+      height,
       cutHeight,
       assignments,
       labels: data.hierLabels,
       focusCluster: state.hierFocusCluster,
       cutLabel: "cut here",
-      annotations: [{ screen: [0.74, 0.16], text: "read these groups", align: "middle" }],
+      annotations: [{ screen: [0.74, 0.16], text: "read these groups", align: "middle" }, ...groupAnnotations],
     }),
   );
 
-  refs["hier-final-cluster-cards"].innerHTML = groups
-    .slice()
-    .sort((left, right) => Math.min(...left) - Math.min(...right))
+  refs["hier-final-cluster-cards"].innerHTML = orderedGroups
     .map((group, index) => {
       const points = group.map((member) => data.hierMain[member]);
       const center = meanPoint(points);
@@ -1849,8 +1985,8 @@ function renderHierFinal() {
           </div>
           <div class="cluster-copy">
             <span>${group.length} dots</span>
-            <span>members ${group.map((member) => member + 1).join(", ")}</span>
-            <span>group middle (${formatNumber(center[0], 2)}, ${formatNumber(center[1], 2)})</span>
+            <span>${describeScatterRegion(center)}</span>
+            <span>dots ${group.map((member) => member + 1).join(", ")}</span>
           </div>
         </button>
       `;
@@ -1900,8 +2036,11 @@ function animateHeroPlots(time) {
       note: frame.title,
       legend: "plus sign = group middle",
       annotations: frame.centroids.length
-        ? [{ point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 }]
-        : [],
+        ? [
+            { point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 },
+            { screen: [0.66, 0.16], text: "forming groups", color: getCssVar("--accent-alt") },
+          ]
+        : [{ screen: [0.12, 0.16], text: "no labels yet", color: getCssVar("--accent-alt") }],
     }),
   );
 
@@ -1922,7 +2061,8 @@ function animateHeroPlots(time) {
       labels: data.hierLabels,
       cutLabel: "cut here",
       annotations: [
-        { screen: [0.08, 0.84], text: "closest dots join first" },
+        { screen: [0.08, 0.84], text: "small groups" },
+        { screen: [0.54, 0.46], text: "bigger groups", align: "middle", color: getCssVar("--accent-alt") },
       ],
     }),
   );
