@@ -1090,7 +1090,7 @@ const state = {
   kmeansFocusCluster: 0,
   hierMergeStep: 3,
   hierCutPercent: 55,
-  hierLinkage: "complete",
+  hierLinkage: "average",
   hierDistance: "euclidean",
   hierScaleMode: "raw",
   hierOutlierMode: "hide",
@@ -1132,7 +1132,7 @@ function refineNarrativeLayout() {
     const stack = copy.querySelector(".callout-stack");
     if (stack) {
       const callouts = Array.from(stack.querySelectorAll(".callout"));
-      const primary = callouts.find((item) => !item.querySelector("pre")) || callouts[0];
+      const primary = callouts.find((item) => !item.querySelector("pre")) || null;
       const code = callouts.find((item) => item.querySelector("pre"));
       const supportBand = document.createElement("div");
       supportBand.className = "support-band";
@@ -1285,7 +1285,7 @@ function renderKmeansUnsupervised() {
     points: data.kmeansMain,
     assignments: state.kmeansReveal ? previewAssignments : null,
     centroids: state.kmeansReveal ? cache.bestKRuns[3].centroids : [],
-    note: state.kmeansReveal ? "colors show the groups" : "just gray dots for now",
+    note: state.kmeansReveal ? "colors show the groups" : "gray dots only",
     legend: state.kmeansReveal ? "plus sign = group middle" : "no groups yet",
     annotations: state.kmeansReveal
       ? [{ point: cache.bestKRuns[3].centroids[0], text: "group middle", dx: 12, dy: -16 }]
@@ -1328,7 +1328,7 @@ function renderAlgorithm() {
           : frame.step === 1
             ? "the computer makes a first guess"
             : frame.step === 2
-              ? "each group gets a middle"
+              ? "each group gets a new middle"
               : frame.moved === 0
                 ? "nothing is changing now"
                 : "each dot moves to the nearest middle",
@@ -1364,7 +1364,7 @@ function renderChooseK() {
           ? "this may be too few groups"
           : state.kmeansSelectedK >= 6
             ? "this may be too many groups"
-            : `K = ${state.kmeansSelectedK}`,
+            : "this may be about right",
       annotations: [{ point: diagnostic.run.centroids[0], text: "group middle", dx: 12, dy: -16 }],
     }),
   );
@@ -1444,7 +1444,7 @@ function renderScaleDemo() {
   const centroids = clusterSummaries(data.scaleData, assignments).map((summary) => summary.centroid);
 
   refs["kmeans-scale-note"].textContent =
-    state.kmeansScaleMode === "raw" ? "big sock numbers take over" : "both axes count more evenly";
+    state.kmeansScaleMode === "raw" ? "big numbers win" : "numbers are fairer now";
   refs["kmeans-scale-basis"].textContent = state.kmeansScaleMode === "raw" ? "original" : "scaled";
   refs["kmeans-scale-story"].textContent =
     state.kmeansScaleMode === "raw" ? "sock count wins" : "both sides count";
@@ -1456,11 +1456,11 @@ function renderScaleDemo() {
       assignments,
       centroids,
       axes: { xLabel: "Socks", yLabel: "Computers" },
-      note: state.kmeansScaleMode === "raw" ? "bigger numbers win" : "number sizes are balanced",
+      note: state.kmeansScaleMode === "raw" ? "big numbers win" : "numbers are fairer now",
       annotations: [
         {
           screen: [0.62, 0.14],
-          text: state.kmeansScaleMode === "raw" ? "big numbers win" : "both axes count",
+          text: state.kmeansScaleMode === "raw" ? "big numbers win" : "numbers are fairer",
         },
       ],
     }),
@@ -1476,7 +1476,7 @@ function renderOutlierDemo() {
   const shift = euclideanDistance(baseRun.centroids[1], withOutlierRun.centroids[1]);
 
   refs["kmeans-outlier-note"].textContent = showOutlier
-    ? "the group middle slides toward the weird point"
+    ? "the middle slides toward the weird point"
     : "no weird point yet";
   refs["kmeans-outlier-shift"].textContent = formatNumber(showOutlier ? shift : 0, 2);
   refs["kmeans-outlier-inertia"].textContent = showOutlier
@@ -1494,7 +1494,7 @@ function renderOutlierDemo() {
       outlierIndex: showOutlier ? points.length - 1 : null,
       outlierPoint: showOutlier ? data.outlierPoint : null,
       outlierText: "weird point",
-      note: showOutlier ? "dashed mark = old group middle" : "watch the group middle",
+      note: showOutlier ? "dashed mark = old middle" : "watch the group middle",
       annotations: showOutlier
         ? [{ point: run.centroids[1], text: "group middle", dx: 12, dy: -16 }]
         : [{ point: run.centroids[1], text: "group middle", dx: 12, dy: -16 }],
@@ -1659,15 +1659,15 @@ function renderHierLinkage() {
   const cutHeight = clustering.maxHeight * 0.48;
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.linkageData.length);
   const noteMap = {
-    complete: "uses the farthest pair",
     single: "uses the closest pair",
-    average: "uses the average gap",
+    average: "uses average closeness",
+    complete: "uses the farthest pair",
     centroid: "uses the group middle",
   };
   const displayMap = {
-    complete: "farthest pair",
     single: "closest pair",
-    average: "average gap",
+    average: "average closeness",
+    complete: "farthest pair",
     centroid: "group middle",
   };
 
@@ -1707,10 +1707,10 @@ function renderHierDistance() {
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.profileData.length);
 
   refs["hier-distance-note"].textContent =
-    state.hierDistance === "euclidean" ? "close means same size" : "close means same shape";
-  refs["hier-distance-active"].textContent = state.hierDistance === "euclidean" ? "same size" : "same shape";
+    state.hierDistance === "euclidean" ? "close means same size" : "close means same pattern";
+  refs["hier-distance-active"].textContent = state.hierDistance === "euclidean" ? "same size" : "same pattern";
   refs["hier-distance-story"].textContent =
-    state.hierDistance === "euclidean" ? "how much" : "up-and-down shape";
+    state.hierDistance === "euclidean" ? "how much there is" : "up-and-down pattern";
 
   setSvg(
     refs["hier-distance-dendrogram"],
@@ -1724,7 +1724,7 @@ function renderHierDistance() {
       annotations: [
         {
           screen: [0.14, 0.18],
-          text: state.hierDistance === "euclidean" ? "same size" : "same shape",
+          text: state.hierDistance === "euclidean" ? "same size" : "same pattern",
         },
       ],
     }),
@@ -1738,7 +1738,7 @@ function renderHierScale() {
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.scaleData.length);
 
   refs["hier-scale-note"].textContent =
-    state.hierScaleMode === "raw" ? "big sock numbers take over" : "both axes count more evenly";
+    state.hierScaleMode === "raw" ? "big numbers take over" : "numbers are fairer now";
   refs["hier-scale-basis"].textContent = state.hierScaleMode === "raw" ? "original" : "scaled";
   refs["hier-scale-story"].textContent =
     state.hierScaleMode === "raw" ? "sock count wins" : "both sides count";
@@ -1752,7 +1752,7 @@ function renderHierScale() {
       points: data.scaleData,
       assignments,
       axes: { xLabel: "Socks", yLabel: "Computers" },
-      note: state.hierScaleMode === "raw" ? "big numbers win" : "number sizes are balanced",
+      note: state.hierScaleMode === "raw" ? "big numbers win" : "numbers are fairer now",
     }),
   );
   setSvg(
@@ -1776,7 +1776,7 @@ function renderHierOutlier() {
   const singletonRisk = showOutlier ? "high chance" : "low chance";
 
   refs["hier-outlier-note"].textContent = showOutlier
-    ? "the weird point waits until the end"
+    ? "the weird point stays alone for longer"
     : "no lonely branch yet";
   refs["hier-outlier-height"].textContent = formatNumber(clustering.maxHeight, 2);
   refs["hier-outlier-story"].textContent = showOutlier ? "lonely branch" : "steady";

@@ -1,7 +1,7 @@
 :root {
   color-scheme: light;
-  --content-width: 1120px;
-  --copy-width: 620px;
+  --content-width: 1260px;
+  --copy-width: 430px;
   --bg: #f5f2ec;
   --panel: rgba(255, 255, 255, 0.72);
   --panel-strong: rgba(255, 255, 255, 0.9);
@@ -183,7 +183,7 @@ button {
 }
 
 .start-card {
-  width: min(100%, 880px);
+  width: min(100%, 980px);
   display: grid;
   gap: 12px;
   justify-items: center;
@@ -234,17 +234,17 @@ button {
 
 .hero {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 26px;
+  grid-template-columns: minmax(320px, var(--copy-width)) minmax(0, 1fr);
+  gap: 34px;
   align-items: center;
-  justify-items: center;
+  justify-items: stretch;
   min-height: auto;
   padding: clamp(34px, 5vw, 54px) 0 clamp(52px, 7vw, 92px);
 }
 
 .hero-copy {
-  max-width: 44rem;
-  text-align: center;
+  max-width: var(--copy-width);
+  text-align: left;
 }
 
 .eyebrow {
@@ -265,18 +265,19 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(2.9rem, 6vw, 5.2rem);
-  max-width: 12ch;
+  font-size: clamp(3rem, 5vw, 4.8rem);
+  max-width: 9ch;
 }
 
 h2 {
-  font-size: clamp(1.9rem, 3.1vw, 3rem);
-  max-width: 15ch;
+  font-size: clamp(1.9rem, 2.9vw, 2.8rem);
+  max-width: 11ch;
 }
 
 .lede,
 .simple-line,
 .guide-line,
+.try-line,
 .chapter-copy p,
 .checklist li {
   color: var(--muted);
@@ -288,14 +289,12 @@ h2 {
 .guide-line {
   margin: 22px 0 0;
   font-size: clamp(0.98rem, 1.2vw, 1.12rem);
-  max-width: 34rem;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 30rem;
 }
 
 .simple-line {
-  margin: 16px auto 0;
-  max-width: 30rem;
+  margin: 16px 0 0;
+  max-width: 26rem;
   color: var(--text);
   font-size: clamp(1.02rem, 1.25vw, 1.14rem);
   line-height: 1.45;
@@ -305,12 +304,27 @@ h2 {
   margin-top: 10px;
 }
 
+.try-line {
+  margin: 16px 0 0;
+  max-width: 30rem;
+  padding-left: 14px;
+  border-left: 2px solid var(--accent-soft);
+  color: var(--text);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.try-line span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .hero-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 28px;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .hero-pills span,
@@ -369,15 +383,15 @@ h2 {
 
 .surface-hero {
   width: 100%;
-  min-height: 74vh;
+  min-height: 78vh;
 }
 
 .surface-tall {
-  min-height: 760px;
+  min-height: 820px;
 }
 
 .surface-dual {
-  min-height: 660px;
+  min-height: 720px;
 }
 
 .surface-heading {
@@ -401,37 +415,37 @@ h2 {
 
 .chapter {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 22px;
-  align-items: start;
-  justify-items: center;
+  grid-template-columns: minmax(320px, var(--copy-width)) minmax(0, 1fr);
+  gap: 34px;
+  align-items: center;
+  justify-items: stretch;
   padding: 9vh 0;
 }
 
 .chapter-copy {
   max-width: var(--copy-width);
-  margin: 0 auto;
-  text-align: center;
+  margin: 0;
+  text-align: left;
 }
 
 .chapter-copy p {
-  margin: 18px auto 0;
-  max-width: 54ch;
+  margin: 18px 0 0;
+  max-width: 30rem;
 }
 
 .chapter-copy .simple-line {
-  max-width: 38rem;
+  max-width: 28rem;
 }
 
 .chapter-copy .guide-line {
-  max-width: 44rem;
+  max-width: 30rem;
 }
 
 .chapter-visual {
   position: static;
   width: 100%;
-  max-width: 1060px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
 }
 
 .chapter-checklist .chapter-visual {
@@ -506,7 +520,7 @@ h2 {
 .visual-controls {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px 14px;
   width: 100%;
@@ -514,18 +528,18 @@ h2 {
 }
 
 .visual-controls .segment-group {
-  margin: 0 auto;
+  margin: 0;
 }
 
 .step-list {
-  margin: 18px auto 0;
+  margin: 18px 0 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: center;
-  max-width: 620px;
+  justify-content: flex-start;
+  max-width: none;
 }
 
 .step-list li {
@@ -564,16 +578,16 @@ h2 {
 .support-band {
   display: grid;
   gap: 10px;
-  justify-items: center;
+  justify-items: start;
   margin-top: 18px;
 }
 
 .support-note {
   position: relative;
   width: 100%;
-  max-width: 52ch;
+  max-width: 100%;
   padding: 0;
-  text-align: center;
+  text-align: left;
 }
 
 .support-label {
@@ -594,7 +608,7 @@ h2 {
 .r-peek,
 .r-peek-final {
   width: 100%;
-  max-width: 620px;
+  max-width: 100%;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.68);
   border: 1px solid var(--line);
@@ -652,31 +666,31 @@ h2 {
 }
 
 .plot {
-  min-height: 420px;
+  min-height: 500px;
 }
 
 .plot-large {
-  min-height: 620px;
+  min-height: 700px;
 }
 
 .plot-small {
-  min-height: 180px;
+  min-height: 220px;
 }
 
 .plot-small-wide {
-  min-height: 180px;
+  min-height: 220px;
 }
 
 .plot-half {
-  min-height: 320px;
+  min-height: 380px;
 }
 
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  max-width: 760px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
 }
 
 .metric-card {
@@ -821,9 +835,9 @@ h2 {
   display: grid;
   gap: 10px;
   text-align: left;
-  max-width: 52ch;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 30rem;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .checklist li {
@@ -854,7 +868,17 @@ h2 {
   transform: translateY(0);
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 920px) {
+  .hero,
+  .chapter {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy,
+  .chapter-copy {
+    max-width: none;
+  }
+
   .surface-hero {
     min-height: 56vh;
   }
@@ -890,6 +914,11 @@ h2 {
   .profile-grid,
   .start-steps {
     grid-template-columns: 1fr;
+  }
+
+  .hero-copy,
+  .chapter-copy {
+    text-align: left;
   }
 
   .plot,
