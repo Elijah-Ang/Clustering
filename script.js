@@ -168,6 +168,38 @@ function computeInertia(points, assignments, centroids) {
   }, 0);
 }
 
+function axisRanges(points) {
+  const xs = points.map((point) => point[0]);
+  const ys = points.map((point) => point[1]);
+  return {
+    x: Math.max(...xs) - Math.min(...xs),
+    y: Math.max(...ys) - Math.min(...ys),
+  };
+}
+
+function interpolatePoint(left, right, amount) {
+  return left.map((value, index) => value + (right[index] - value) * amount);
+}
+
+function interpolatePoints(left, right, amount) {
+  return left.map((point, index) => interpolatePoint(point, right[index] || point, amount));
+}
+
+function sampleAssignmentLineIndices(assignments, limitPerCluster = 2) {
+  if (!assignments) return [];
+  const picked = [];
+  const seen = new Map();
+  assignments.forEach((cluster, index) => {
+    if (cluster < 0) return;
+    const count = seen.get(cluster) || 0;
+    if (count < limitPerCluster) {
+      picked.push(index);
+      seen.set(cluster, count + 1);
+    }
+  });
+  return picked;
+}
+
 function countDifferences(left, right) {
   let count = 0;
   for (let index = 0; index < left.length; index += 1) {
@@ -248,6 +280,89 @@ function kmeansTrace(points, k, seed, maxIterations = 8) {
     finalAssignments: assignments.slice(),
     finalCentroids: centroids.map(clonePoint),
   };
+}
+
+function buildHeroKmeansFrames(points, k, seed, maxIterations = 3) {
+  const rng = mulberry32(seed);
+  const startCentroids = sampleUnique(points, k, rng);
+  const frames = [
+    {
+      title: "Pick how many groups",
+      assignments: null,
+      centroids: [],
+      initialCentroids: [],
+      ghostCentroids: [],
+      showLines: false,
+      labels: [{ screen: [0.12, 0.16], text: "no labels yet", color: "#ff8a62" }],
+    },
+    {
+      title: "Random starting middles",
+      assignments: null,
+      centroids: [],
+      initialCentroids: startCentroids.map(clonePoint),
+      ghostCentroids: [],
+      showLines: false,
+      labels: [{ point: startCentroids[0], text: "random start", dx: 12, dy: -14, color: "#ff8a62" }],
+    },
+  ];
+
+  let centroids = startCentroids.map(clonePoint);
+  let assignments = Array(points.length).fill(-1);
+
+  for (let loop = 0; loop < maxIterations; loop += 1) {
+    const nextAssignments = points.map((point) => nearestCenterIndex(point, centroids));
+    frames.push({
+      title: loop === 0 ? "Dots join the nearest middle" : "Dots check again",
+      assignments: nextAssignments.slice(),
+      centroids: centroids.map(clonePoint),
+      initialCentroids: [],
+      ghostCentroids: [],
+      showLines: true,
+      labels: [
+        { point: centroids[0], text: "group middle", dx: 12, dy: -16 },
+        { screen: [0.62, 0.16], text: "nearest group", color: "#ff8a62" },
+      ],
+    });
+
+    const nextCentroids = computeCentroids(points, nextAssignments, k, rng);
+    frames.push({
+      title: loop === 0 ? "Middles move to the average" : "Middles move again",
+      assignments: nextAssignments.slice(),
+      centroids: nextCentroids.map(clonePoint),
+      initialCentroids: [],
+      ghostCentroids: centroids.map(clonePoint),
+      showLines: false,
+      interpolate: true,
+      labels: [
+        { point: centroids[0], text: "old middle", dx: -58, dy: -16, color: "#ff8a62" },
+        { point: nextCentroids[0], text: "new middle", dx: 12, dy: 18 },
+      ],
+    });
+
+    if (countDifferences(assignments, nextAssignments) === 0) {
+      assignments = nextAssignments.slice();
+      centroids = nextCentroids.map(clonePoint);
+      break;
+    }
+
+    assignments = nextAssignments.slice();
+    centroids = nextCentroids.map(clonePoint);
+  }
+
+  frames.push({
+    title: "Stop when nothing changes",
+    assignments: assignments.slice(),
+    centroids: centroids.map(clonePoint),
+    initialCentroids: [],
+    ghostCentroids: [],
+    showLines: false,
+    labels: [
+      { point: centroids[0], text: "group middle", dx: 12, dy: -16 },
+      { screen: [0.66, 0.16], text: "settled groups", color: "#ff8a62" },
+    ],
+  });
+
+  return frames;
 }
 
 function kmeansRun(points, k, seed, maxIterations = 50) {
@@ -575,6 +690,32 @@ function scatterSvg(options) {
     })
     .join("");
 
+  const assignmentLines =
+    options.assignmentLineIndices && options.assignments && (options.centroids || []).length
+      ? options.assignmentLineIndices
+          .map((pointIndex) => {
+            const cluster = options.assignments[pointIndex];
+            const center = options.centroids[cluster];
+            if (cluster < 0 || !center || !mappedPoints[pointIndex]) return "";
+            const [x1, y1] = mappedPoints[pointIndex];
+            const [x2, y2] = mapSinglePoint(center, bounds, width, height, padding);
+            const color = PALETTE[cluster % PALETTE.length];
+            return `
+              <line
+                x1="${x1}"
+                y1="${y1}"
+                x2="${x2}"
+                y2="${y2}"
+                stroke="${color}"
+                stroke-opacity="0.24"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
+            `;
+          })
+          .join("")
+      : "";
+
   const pointsLayer = mappedPoints
     .map(([x, y], index) => {
       const cluster = options.assignments ? options.assignments[index] : -1;
@@ -659,6 +800,7 @@ function scatterSvg(options) {
     ${legend}
     ${ghostCentroids}
     ${initialCentroids}
+    ${assignmentLines}
     ${pointsLayer}
     ${centroids}
     ${inlineLabels}
@@ -974,12 +1116,21 @@ function renderProfileCards(container, profiles, assignments, labels) {
   container.innerHTML = profiles
     .map((profile, index) => {
       const color = PALETTE[assignments[index] % PALETTE.length];
+      const notes = [
+        "small rise",
+        "big rise",
+        "small fall",
+        "big fall",
+        "flat small",
+        "flat big",
+      ];
       return `
         <div class="profile-card">
           <header>
             <strong>${labels[index]}</strong>
             <span>group ${assignments[index] + 1}</span>
           </header>
+          <p>${notes[index]}</p>
           <svg viewBox="0 0 160 90" class="plot plot-small" role="img" aria-label="Profile ${labels[index]}">
             <rect x="0" y="0" width="160" height="90" rx="18" fill="${SURFACE}" />
             <path d="${profilePath(profile, 160, 90, 16)}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
@@ -1164,7 +1315,7 @@ const state = {
   hierFocusCluster: 0,
 };
 
-const heroTrace = kmeansTrace(data.kmeansMain, 3, 30);
+const heroFrames = buildHeroKmeansFrames(data.kmeansMain, 3, 30);
 
 const refs = {};
 
@@ -1259,7 +1410,6 @@ function bindElements() {
     "kmeans-algorithm-plot",
     "kmeans-algorithm-moved",
     "kmeans-algorithm-inertia",
-    "kmeans-algorithm-loop",
     "kmeans-k-slider",
     "kmeans-k-slider-value",
     "kmeans-k-plot",
@@ -1267,14 +1417,12 @@ function bindElements() {
     "kmeans-silhouette-plot",
     "kmeans-k-inertia",
     "kmeans-k-silhouette",
-    "kmeans-k-balance",
     "kmeans-random-reroll",
     "kmeans-random-current",
     "kmeans-random-best",
     "kmeans-random-summary",
     "kmeans-random-current-inertia",
     "kmeans-random-best-inertia",
-    "kmeans-random-gap",
     "kmeans-scale-controls",
     "kmeans-scale-plot",
     "kmeans-scale-note",
@@ -1285,7 +1433,6 @@ function bindElements() {
     "kmeans-outlier-note",
     "kmeans-outlier-shift",
     "kmeans-outlier-inertia",
-    "kmeans-outlier-story",
     "kmeans-final-plot",
     "kmeans-cluster-cards",
     "kmeans-realdata-plot",
@@ -1305,13 +1452,11 @@ function bindElements() {
     "hier-cut-scatter",
     "hier-cut-clusters",
     "hier-cut-height-label",
-    "hier-cut-story",
     "hier-linkage-controls",
     "hier-linkage-note",
     "hier-linkage-scatter",
     "hier-linkage-dendrogram",
     "hier-linkage-active",
-    "hier-linkage-height",
     "hier-linkage-warning",
     "hier-distance-controls",
     "hier-distance-note",
@@ -1379,10 +1524,14 @@ function renderAlgorithm() {
 
   refs["kmeans-algorithm-k-value"].textContent = String(state.kmeansAlgorithm.k);
   refs["kmeans-algorithm-title"].textContent = frame.title;
-  refs["kmeans-algorithm-subtitle"].textContent = `step ${state.kmeansAlgorithm.step + 1} of ${trace.frames.length}`;
+  refs["kmeans-algorithm-subtitle"].textContent =
+    frame.step === 3
+      ? "dots stay still; only group color and nearest-middle links change"
+      : frame.step === 4
+        ? "dots stay still while the group middles move to the average"
+        : `step ${state.kmeansAlgorithm.step + 1} of ${trace.frames.length}`;
   refs["kmeans-algorithm-moved"].textContent = String(frame.moved);
   refs["kmeans-algorithm-inertia"].textContent = formatNumber(frame.inertia, 2);
-  refs["kmeans-algorithm-loop"].textContent = String(frame.loop);
 
   const steps = refs["kmeans-step-list"].querySelectorAll("li");
   steps.forEach((item, index) => {
@@ -1396,6 +1545,7 @@ function renderAlgorithm() {
       assignments: frame.assignments,
       centroids: frame.centroids,
       ghostCentroids: frame.step === 4 && previousFrame?.centroids?.length ? previousFrame.centroids : [],
+      assignmentLineIndices: frame.step === 3 ? sampleAssignmentLineIndices(frame.assignments, 2) : [],
       note:
         frame.step === 0
           ? "start by picking how many groups"
@@ -1442,10 +1592,6 @@ function renderChooseK() {
   refs["kmeans-k-slider-value"].textContent = String(state.kmeansSelectedK);
   refs["kmeans-k-inertia"].textContent = formatNumber(diagnostic.inertia, 2);
   refs["kmeans-k-silhouette"].textContent = formatNumber(diagnostic.silhouette, 2);
-  refs["kmeans-k-balance"].textContent = formatPercent(
-    Math.max(...diagnostic.summaries.map((summary) => summary.share)),
-    0,
-  );
 
   setSvg(
     refs["kmeans-k-plot"],
@@ -1484,7 +1630,7 @@ function renderChooseK() {
     lineChartSvg(elbowValues, {
       labels,
       selectedIndex: state.kmeansSelectedK - 1,
-      title: "bend in the line (helper)",
+      title: "total squared distance (lower is better)",
       color: getCssVar("--accent"),
       annotations: [
         { index: 1, text: "too few groups", dy: -12, align: "start", dx: 4 },
@@ -1498,7 +1644,7 @@ function renderChooseK() {
     lineChartSvg(silhouetteValues, {
       labels: labels.slice(1),
       selectedIndex: Math.max(state.kmeansSelectedK - 2, 0),
-      title: "helper score",
+      title: "average silhouette (higher is better)",
       color: getCssVar("--accent-alt"),
       minY: Math.min(...silhouetteValues, 0),
       maxY: Math.max(...silhouetteValues, 0.65),
@@ -1509,12 +1655,10 @@ function renderChooseK() {
 function renderRandomStarts() {
   const current = cache.randomCases[state.kmeansRandomIndex];
   const best = cache.randomCases[0];
-  const improvement = 1 - best.inertia / current.inertia;
 
   refs["kmeans-random-summary"].textContent = `bad start versus best of ${cache.randomCases.length} tries`;
   refs["kmeans-random-current-inertia"].textContent = formatNumber(current.inertia, 2);
   refs["kmeans-random-best-inertia"].textContent = formatNumber(best.inertia, 2);
-  refs["kmeans-random-gap"].textContent = formatPercent(improvement, 0);
 
   setSvg(
     refs["kmeans-random-current"],
@@ -1555,12 +1699,12 @@ function renderScaleDemo() {
   const scaledRun = kmeansRun(cache.scaleInfo.scaled, 2, 1);
   const assignments = state.kmeansScaleMode === "raw" ? rawRun.assignments : scaledRun.assignments;
   const centroids = clusterSummaries(data.scaleData, assignments).map((summary) => summary.centroid);
+  const ranges = axisRanges(state.kmeansScaleMode === "raw" ? data.scaleData : cache.scaleInfo.scaled);
 
   refs["kmeans-scale-note"].textContent =
     state.kmeansScaleMode === "raw" ? "big numbers dominate" : "fairer comparison";
-  refs["kmeans-scale-basis"].textContent = state.kmeansScaleMode === "raw" ? "original" : "scaled";
-  refs["kmeans-scale-story"].textContent =
-    state.kmeansScaleMode === "raw" ? "big numbers dominate" : "fairer comparison";
+  refs["kmeans-scale-basis"].textContent = formatNumber(ranges.x, 2);
+  refs["kmeans-scale-story"].textContent = formatNumber(ranges.y, 2);
 
   setSvg(
     refs["kmeans-scale-plot"],
@@ -1593,9 +1737,8 @@ function renderOutlierDemo() {
     : "no weird point yet";
   refs["kmeans-outlier-shift"].textContent = formatNumber(showOutlier ? shift : 0, 2);
   refs["kmeans-outlier-inertia"].textContent = showOutlier
-    ? formatPercent((withOutlierRun.inertia - baseRun.inertia) / baseRun.inertia, 0)
-    : "0%";
-  refs["kmeans-outlier-story"].textContent = showOutlier ? "pulled off course" : "steady";
+    ? formatNumber(withOutlierRun.inertia - baseRun.inertia, 2)
+    : "0.00";
 
   setSvg(
     refs["kmeans-outlier-plot"],
@@ -1759,8 +1902,6 @@ function renderHierCut() {
     groups.length <= 3 ? "cut high = fewer groups" : "cut low = more groups";
   refs["hier-cut-clusters"].textContent = String(groups.length);
   refs["hier-cut-height-label"].textContent = formatNumber(cutHeight, 2);
-  refs["hier-cut-story"].textContent =
-    groups.length <= 2 ? "few big groups" : groups.length >= 5 ? "many small groups" : "middle cut";
 
   setSvg(
     refs["hier-cut-dendrogram"],
@@ -1816,14 +1957,13 @@ function renderHierLinkage() {
     complete: "farthest pair",
   };
   const feelMap = {
-    single: "can chain",
-    average: "balanced",
-    complete: "stays tight",
+    single: "one near pair can pull groups into a chain",
+    average: "uses the mean distance across all pairs",
+    complete: "every point must stay fairly close before joining",
   };
 
   refs["hier-linkage-note"].textContent = `${noteMap[state.hierLinkage]} decides each join`;
   refs["hier-linkage-active"].textContent = displayMap[state.hierLinkage];
-  refs["hier-linkage-height"].textContent = formatNumber(clustering.maxHeight, 2);
   refs["hier-linkage-warning"].textContent = feelMap[state.hierLinkage];
 
   setSvg(
@@ -1861,7 +2001,7 @@ function renderHierDistance() {
     state.hierDistance === "euclidean" ? "close means same size" : "close means same pattern";
   refs["hier-distance-active"].textContent = state.hierDistance === "euclidean" ? "same size" : "same pattern";
   refs["hier-distance-story"].textContent =
-    state.hierDistance === "euclidean" ? "looks at size first" : "looks at shape first";
+    state.hierDistance === "euclidean" ? "use this when amount matters more" : "use this when shape matters more";
 
   setSvg(
     refs["hier-distance-dendrogram"],
@@ -1893,12 +2033,12 @@ function renderHierScale() {
   const clustering = state.hierScaleMode === "raw" ? cache.scaleRawHier : cache.scaleScaledHier;
   const cutHeight = clustering.maxHeight * 0.43;
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), data.scaleData.length);
+  const ranges = axisRanges(state.hierScaleMode === "raw" ? data.scaleData : cache.scaleInfo.scaled);
 
   refs["hier-scale-note"].textContent =
     state.hierScaleMode === "raw" ? "big numbers dominate" : "fairer tree";
-  refs["hier-scale-basis"].textContent = state.hierScaleMode === "raw" ? "original" : "scaled";
-  refs["hier-scale-story"].textContent =
-    state.hierScaleMode === "raw" ? "big numbers dominate" : "fairer comparison";
+  refs["hier-scale-basis"].textContent = formatNumber(ranges.x, 2);
+  refs["hier-scale-story"].textContent = formatNumber(ranges.y, 2);
 
   setSvg(
     refs["hier-scale-scatter"],
@@ -1946,9 +2086,9 @@ function renderHierOutlier() {
 
   refs["hier-outlier-note"].textContent = showOutlier
     ? "the weird point stays alone for longer"
-    : "no lonely branch yet";
-  refs["hier-outlier-height"].textContent = formatNumber(clustering.maxHeight, 2);
-  refs["hier-outlier-story"].textContent = showOutlier ? "lonely branch" : "steady tree";
+    : "show the weird point to compare its last join";
+  refs["hier-outlier-height"].textContent = showOutlier ? formatNumber(clustering.maxHeight, 2) : "-";
+  refs["hier-outlier-story"].textContent = showOutlier ? "inspect that point" : "show it first";
 
   setSvg(
     refs["hier-outlier-scatter"],
@@ -2099,15 +2239,15 @@ function renderAllStatic() {
 
 function animateHeroPlots(time) {
   const frameDuration = 1200;
-  const total = heroTrace.frames.length * frameDuration;
+  const total = heroFrames.length * frameDuration;
   const position = (time % total) / frameDuration;
   const frameIndex = Math.floor(position);
-  const frame = heroTrace.frames[frameIndex];
-
-  const jittered = data.kmeansMain.map((point, index) => [
-    point[0] + Math.sin(time / 900 + index * 0.41) * 0.05,
-    point[1] + Math.cos(time / 1050 + index * 0.31) * 0.05,
-  ]);
+  const frame = heroFrames[frameIndex];
+  const frameProgress = position - frameIndex;
+  const centroids =
+    frame.interpolate && frame.ghostCentroids.length
+      ? interpolatePoints(frame.ghostCentroids, frame.centroids, frameProgress)
+      : frame.centroids;
 
   setSvg(
     refs["kmeans-hero-plot"],
@@ -2115,17 +2255,15 @@ function animateHeroPlots(time) {
       width: 620,
       height: 520,
       padding: 56,
-      points: jittered,
+      points: data.kmeansMain,
       assignments: frame.assignments,
-      centroids: frame.centroids,
+      centroids,
+      initialCentroids: frame.initialCentroids,
+      ghostCentroids: frame.interpolate ? frame.ghostCentroids : [],
+      assignmentLineIndices: frame.showLines ? sampleAssignmentLineIndices(frame.assignments, 2) : [],
       note: frame.title,
       legend: "plus sign = group middle",
-      annotations: frame.centroids.length
-        ? [
-            { point: frame.centroids[0], text: "group middle", dx: 12, dy: -16 },
-            { screen: [0.66, 0.16], text: "forming groups", color: getCssVar("--accent-alt") },
-          ]
-        : [{ screen: [0.12, 0.16], text: "no labels yet", color: getCssVar("--accent-alt") }],
+      annotations: frame.labels,
     }),
   );
 

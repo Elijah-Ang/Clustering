@@ -179,7 +179,7 @@ button {
   display: grid;
   grid-template-columns: minmax(320px, var(--copy-width)) minmax(0, 1fr);
   gap: 34px;
-  align-items: center;
+  align-items: start;
   justify-items: stretch;
   min-height: auto;
   padding: clamp(34px, 5vw, 54px) 0 clamp(52px, 7vw, 92px);
@@ -188,6 +188,7 @@ button {
 .hero-copy {
   max-width: var(--copy-width);
   text-align: left;
+  align-self: start;
 }
 
 .eyebrow {
@@ -360,7 +361,7 @@ h2 {
   display: grid;
   grid-template-columns: minmax(320px, var(--copy-width)) minmax(0, 1fr);
   gap: 34px;
-  align-items: center;
+  align-items: start;
   justify-items: stretch;
   padding: 9vh 0;
 }
@@ -369,6 +370,7 @@ h2 {
   max-width: var(--copy-width);
   margin: 0;
   text-align: left;
+  align-self: start;
 }
 
 .chapter-copy p {
@@ -389,6 +391,7 @@ h2 {
   width: 100%;
   max-width: none;
   margin: 0;
+  align-self: start;
 }
 
 .chapter-checklist .chapter-visual {
@@ -649,12 +652,12 @@ h2 {
 }
 
 .metric-card {
-  padding: 10px 8px 0;
+  padding: 12px 8px 0;
   border-radius: 0;
   background: transparent;
   border: 0;
   border-top: 1px solid var(--line-strong);
-  text-align: center;
+  text-align: left;
 }
 
 .metric-label {
@@ -672,6 +675,13 @@ h2 {
   line-height: 1.12;
   letter-spacing: -0.02em;
   font-weight: 500;
+}
+
+.metric-help {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .plot-grid {
@@ -776,6 +786,13 @@ h2 {
   margin-bottom: 10px;
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.profile-card p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 
 .profile-card span {

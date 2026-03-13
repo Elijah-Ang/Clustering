@@ -34,9 +34,9 @@
                 We are grouping similar dots together. The plus sign marks the group middle. Later
                 we call that middle a centroid.
               </p>
-              <p class="try-line"><span>Try this:</span> Watch the dots gather before you touch any controls.</p>
+              <p class="try-line"><span>Try this:</span> Watch the dots stay still while colors and middles change.</p>
               <div class="hero-pills">
-                <span>watch dots gather</span>
+                <span>watch colors change</span>
                 <span>move K</span>
                 <span>try another start</span>
                 <span>open R code</span>
@@ -114,21 +114,19 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
             <div class="chapter-visual surface">
               <div class="surface-heading">
                 <span id="kmeans-algorithm-title">Watch one full K-means run</span>
-                <span id="kmeans-algorithm-subtitle" class="surface-caption">dots move, middles move, then the picture settles</span>
+                <span id="kmeans-algorithm-subtitle" class="surface-caption">dots stay fixed while colors and middles update</span>
               </div>
               <svg id="kmeans-algorithm-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="K-means algorithm loop"></svg>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Dots that switched</span>
+                  <span class="metric-label">Dots reassigned</span>
                   <strong id="kmeans-algorithm-moved" class="metric-value">0</strong>
+                  <p class="metric-help">Count dots that changed group on this step. Lower is better. When it reaches 0, stop.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">How spread out</span>
+                  <span class="metric-label">Total squared distance</span>
                   <strong id="kmeans-algorithm-inertia" class="metric-value">-</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Round number</span>
-                  <strong id="kmeans-algorithm-loop" class="metric-value">0</strong>
+                  <p class="metric-help">Add squared distances from each dot to its group middle. Lower is better. If it stops dropping, the fit has settled.</p>
                 </div>
               </div>
             </div>
@@ -140,8 +138,9 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               <h2>Pick How Many Groups.</h2>
               <p class="simple-line">Too few groups mix dots together. Too many split one group into little pieces.</p>
               <p class="guide-line">
-                Look at the picture first. A helper line can support you, but the main question is
-                whether the groups look clear and believable.
+                Use the top picture first. The lower-left chart adds squared distances inside
+                groups. The lower-right chart averages how well each dot fits its own group versus
+                the next closest group.
               </p>
               <p class="try-line"><span>Try this:</span> Move K until the big picture looks simple.</p>
               <div class="range-row">
@@ -161,7 +160,7 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
             <div class="chapter-visual surface surface-tall">
               <div class="surface-heading">
                 <span>Try fewer or more groups</span>
-                <span class="surface-caption">big picture first, helper lines second</span>
+                <span class="surface-caption">picture first, helper charts explain why</span>
               </div>
               <svg id="kmeans-k-plot" class="plot" viewBox="0 0 620 360" role="img" aria-label="K-means clusters for selected K"></svg>
               <div class="plot-grid">
@@ -170,16 +169,19 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               </div>
               <div class="metric-grid">
                 <div class="metric-card">
-                  <span class="metric-label">Spread out</span>
+                  <span class="metric-label">Total squared distance</span>
                   <strong id="kmeans-k-inertia" class="metric-value">0</strong>
+                  <p class="metric-help">Add squared distances from each dot to its group middle. Lower is better. Use the first clear bend, not the absolute minimum.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Groups stay apart</span>
+                  <span class="metric-label">Average silhouette</span>
                   <strong id="kmeans-k-silhouette" class="metric-value">0</strong>
+                  <p class="metric-help">For each dot, compare its own group with the next closest group. Higher is better. Prefer larger values when the picture still looks simple.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Biggest group</span>
-                  <strong id="kmeans-k-balance" class="metric-value">0%</strong>
+                  <span class="metric-label">What to do</span>
+                  <strong class="metric-value">Use picture first</strong>
+                  <p class="metric-help">Try several K values. Keep the first one that looks clear and is supported by the helper charts.</p>
                 </div>
               </div>
             </div>
@@ -191,8 +193,9 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               <h2>Try More Than One Start.</h2>
               <p class="simple-line">A bad first guess can give a bad answer.</p>
               <p class="guide-line">
-                K-means begins with a first guess for the group middles. Different first guesses
-                can lead to different final groups, so we try many and keep the best answer.
+                K-means begins with random group middles. We score each run by the total squared
+                distance from dots to their group middles. Lower is better, so we keep the run
+                with the lower total.
               </p>
               <p class="try-line"><span>Try this:</span> Click <strong>Try a new start</strong> a few times.</p>
               <div class="control-row">
@@ -209,7 +212,7 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
                 <span>Bad start vs better start</span>
-                <span id="kmeans-random-summary" class="surface-caption">same dots, different starting guesses</span>
+                <span id="kmeans-random-summary" class="surface-caption">same dots, keep the run with the lower total squared distance</span>
               </div>
               <div class="split-visuals">
                 <div class="subsurface">
@@ -221,18 +224,16 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
                   <svg id="kmeans-random-best" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Best random start solution"></svg>
                 </div>
               </div>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">This try</span>
+                  <span class="metric-label">Current total squared distance</span>
                   <strong id="kmeans-random-current-inertia" class="metric-value">0</strong>
+                  <p class="metric-help">Add squared distances from each dot to its group middle. Lower is better. This is the run you are testing now.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Best try</span>
+                  <span class="metric-label">Best total squared distance</span>
                   <strong id="kmeans-random-best-inertia" class="metric-value">0</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Better by</span>
-                  <strong id="kmeans-random-gap" class="metric-value">0%</strong>
+                  <p class="metric-help">This is the lowest total among the runs tried so far. Keep the lower value because it gives tighter groups.</p>
                 </div>
               </div>
             </div>
@@ -244,8 +245,9 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               <h2>Make Numbers Fair.</h2>
               <p class="simple-line">Big numbers can drown out small numbers.</p>
               <p class="guide-line">
-                If one side uses much bigger numbers, that side can boss the grouping around.
-                Scaling gives both sides a fairer say.
+                K-means uses distance. If one column has a much bigger range, it can dominate that
+                distance. Scaling centers each column and divides by its spread so both count more
+                fairly.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between <strong>Original numbers</strong> and <strong>Scaled numbers</strong>.</p>
               <div class="segment-group" id="kmeans-scale-controls">
@@ -261,12 +263,14 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               <svg id="kmeans-scale-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Scaling demo for K-means"></svg>
               <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Numbers used</span>
-                  <strong id="kmeans-scale-basis" class="metric-value">raw</strong>
+                  <span class="metric-label">X range used</span>
+                  <strong id="kmeans-scale-basis" class="metric-value">0.00</strong>
+                  <p class="metric-help">Range means max minus min for the x values used by the algorithm. Closer ranges are better. If one is much bigger, scale first.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">What wins</span>
-                  <strong id="kmeans-scale-story" class="metric-value">socks dominate</strong>
+                  <span class="metric-label">Y range used</span>
+                  <strong id="kmeans-scale-story" class="metric-value">0.00</strong>
+                  <p class="metric-help">Range means max minus min for the y values used by the algorithm. Closer ranges are better. After scaling, both axes have a fairer say.</p>
                 </div>
               </div>
             </div>
@@ -293,18 +297,16 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
                 <span id="kmeans-outlier-note" class="surface-caption">watch the old and new middle</span>
               </div>
               <svg id="kmeans-outlier-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Outlier distortion demo"></svg>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Middle moved</span>
+                  <span class="metric-label">Centroid shift distance</span>
                   <strong id="kmeans-outlier-shift" class="metric-value">0.00</strong>
+                  <p class="metric-help">Measure the distance between the old and new group middle. Lower is better. A large shift means the weird point is pulling hard.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Spread change</span>
-                  <strong id="kmeans-outlier-inertia" class="metric-value">0%</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Read it as</span>
-                  <strong id="kmeans-outlier-story" class="metric-value">stable</strong>
+                  <span class="metric-label">Change in total squared distance</span>
+                  <strong id="kmeans-outlier-inertia" class="metric-value">0.00</strong>
+                  <p class="metric-help">Compare the total squared distance before and after the weird point. Smaller change is better. Large increases mean the fit is distorted.</p>
                 </div>
               </div>
             </div>
@@ -316,8 +318,8 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
               <h2>Describe the Groups.</h2>
               <p class="simple-line">A group matters only if you can describe it simply.</p>
               <p class="guide-line">
-                After the picture looks good, say what is special about each group in plain words.
-                Ask what these dots have in common.
+                Read the cluster summary, compare it with the other groups, and turn the
+                differences into one short sentence. That is how the math becomes a useful story.
               </p>
               <p class="try-line"><span>Try this:</span> Click each group card and describe it in one sentence.</p>
               <div class="callout-stack">
@@ -405,8 +407,8 @@ aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
               <h2>Start Alone, Then Join.</h2>
               <p class="simple-line">Each dot starts alone, then close dots join.</p>
               <p class="guide-line">
-                The joins keep going until everything is connected. Later you decide where to cut
-                the tree into final groups.
+                The joins keep going until everything is connected. Later you choose a cut height
+                to turn the tree into final groups.
               </p>
               <p class="try-line"><span>Try this:</span> Look at the full tree before picking any final groups.</p>
               <div class="callout-stack">
@@ -432,8 +434,8 @@ plot(hc)</code></pre>
               <h2>Read the Group Tree.</h2>
               <p class="simple-line">The closest dots join first.</p>
               <p class="guide-line">
-                Higher joins mean the groups were less alike. This picture is called a dendrogram,
-                but first just read it as a group tree.
+                Merge height means how far apart the two joining groups were. Lower height means
+                more alike. This picture is called a dendrogram, but first read it as a group tree.
               </p>
               <p class="try-line"><span>Try this:</span> Move the join step slider and watch which dots join first.</p>
               <div class="range-row">
@@ -445,7 +447,7 @@ plot(hc)</code></pre>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
                 <span>Watch who joins first</span>
-                <span id="hier-merge-note" class="surface-caption">higher join = less alike</span>
+                <span id="hier-merge-note" class="surface-caption">merge height = how far apart the joining groups were</span>
               </div>
               <div class="split-visuals">
                 <div class="subsurface">
@@ -457,18 +459,16 @@ plot(hc)</code></pre>
                   <svg id="hier-merge-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Dendrogram fusion step"></svg>
                 </div>
               </div>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
                   <span class="metric-label">Groups left</span>
                   <strong id="hier-merge-clusters" class="metric-value">0</strong>
+                  <p class="metric-help">Count how many groups remain after this many joins. Lower means more merging has happened.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Join level</span>
+                  <span class="metric-label">Merge height</span>
                   <strong id="hier-merge-height" class="metric-value">0</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Higher means</span>
-                  <strong class="metric-value">less alike</strong>
+                  <p class="metric-help">Distance between the two groups that joined on this step. Lower is more alike. Big jumps can suggest a good cut point.</p>
                 </div>
               </div>
             </div>
@@ -480,8 +480,8 @@ plot(hc)</code></pre>
               <h2>Cut the Tree to Make Groups.</h2>
               <p class="simple-line">A high cut gives fewer groups.</p>
               <p class="guide-line">
-                A low cut gives more groups. Move the cut line until the picture feels simple and
-                believable.
+                A low cut gives more groups. Count the branches below the cut line and look for a
+                cut that keeps clear groups without splitting them too far.
               </p>
               <p class="try-line"><span>Try this:</span> Slide the cut line up and down.</p>
               <div class="range-row">
@@ -500,7 +500,7 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
                 <span>Move the cut line</span>
-                <span id="hier-cut-note" class="surface-caption">tree and groups change together</span>
+                <span id="hier-cut-note" class="surface-caption">move the cut line and count the groups below it</span>
               </div>
               <div class="split-visuals">
                 <div class="subsurface">
@@ -512,18 +512,16 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
                   <svg id="hier-cut-scatter" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Clusters at selected cut height"></svg>
                 </div>
               </div>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Group count</span>
+                  <span class="metric-label">Groups at this cut</span>
                   <strong id="hier-cut-clusters" class="metric-value">0</strong>
+                  <p class="metric-help">Count branches below the cut line. Lower cut gives more groups. Higher cut gives fewer groups.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Cut level</span>
+                  <span class="metric-label">Cut height</span>
                   <strong id="hier-cut-height-label" class="metric-value">0</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Read it as</span>
-                  <strong id="hier-cut-story" class="metric-value">broad split</strong>
+                  <p class="metric-help">Height of the dashed line. Lower is stricter and makes more groups. Higher is looser and makes fewer groups.</p>
                 </div>
               </div>
             </div>
@@ -535,8 +533,8 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
               <h2>Three Ways Groups Can Join.</h2>
               <p class="simple-line">Groups can join by the closest pair, average closeness, or farthest pair.</p>
               <p class="guide-line">
-                The tree changes because the rule for joining changes. Switch the rule and watch
-                the shape change.
+                Each rule defines distance between two groups in a different way. Switch the rule
+                and compare the tree on the same dots.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between closest pair, average closeness, and farthest pair.</p>
               <div class="segment-group" id="hier-linkage-controls">
@@ -548,7 +546,7 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
                 <span>Closest, average, or farthest</span>
-                <span id="hier-linkage-note" class="surface-caption">watch how the tree changes</span>
+                <span id="hier-linkage-note" class="surface-caption">watch how the same dots build different trees</span>
               </div>
               <div class="split-visuals">
                 <div class="subsurface">
@@ -560,18 +558,16 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
                   <svg id="hier-linkage-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Linkage comparison dendrogram"></svg>
                 </div>
               </div>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Join rule</span>
+                  <span class="metric-label">Group distance rule</span>
                   <strong id="hier-linkage-active" class="metric-value">average closeness</strong>
+                  <p class="metric-help">This is how the method measures distance between two groups before they join. Single uses the closest pair, average uses the mean pair distance, and complete uses the farthest pair. There is no universal higher or lower better choice. Pick the rule that matches your problem.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Top join</span>
-                  <strong id="hier-linkage-height" class="metric-value">0</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Tree feel</span>
-                  <strong id="hier-linkage-warning" class="metric-value">balanced</strong>
+                  <span class="metric-label">Practical effect</span>
+                  <strong id="hier-linkage-warning" class="metric-value">uses the mean distance across all pairs</strong>
+                  <p class="metric-help">This tells you what kind of tree the rule often makes. Single can create chains, average smooths extremes, and complete keeps groups tight. Compare the trees and keep the rule that best matches how you want groups to behave.</p>
                 </div>
               </div>
             </div>
@@ -583,8 +579,9 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
               <h2>What Does Close Mean?</h2>
               <p class="simple-line">Things can be close by size or close by pattern.</p>
               <p class="guide-line">
-                First decide what kind of closeness matters. Later, the technical names are
-                Euclidean distance for size and correlation distance for pattern.
+                A small rise and a big rise have the same pattern but different sizes. Decide
+                which idea matters first. Later, the technical names are Euclidean distance for
+                size and correlation distance for pattern.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between <strong>Same size</strong> and <strong>Same pattern</strong>.</p>
               <div class="segment-group" id="hier-distance-controls">
@@ -603,7 +600,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
             <div class="chapter-visual surface surface-tall">
               <div class="surface-heading">
                 <span>Close by size or by pattern</span>
-                <span id="hier-distance-note" class="surface-caption">same size is not the same as same pattern</span>
+                <span id="hier-distance-note" class="surface-caption">same size groups by amount; same pattern groups by shape</span>
               </div>
               <div class="plot-grid plot-grid-tall">
                 <svg id="hier-distance-dendrogram" class="plot plot-small-wide" viewBox="0 0 620 180" role="img" aria-label="Distance measure dendrogram"></svg>
@@ -611,12 +608,14 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
               </div>
               <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Close means</span>
+                  <span class="metric-label">Distance rule</span>
                   <strong id="hier-distance-active" class="metric-value">same size</strong>
+                  <p class="metric-help">This is how the method computes distance between two profiles. Euclidean adds point-by-point size differences. Correlation compares the up-and-down shape after centering each profile. There is no universal higher or lower better choice. Pick the rule that matches your question.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">This matches</span>
-                  <strong id="hier-distance-story" class="metric-value">how much there is</strong>
+                  <span class="metric-label">Use this when</span>
+                  <strong id="hier-distance-story" class="metric-value">amount matters more</strong>
+                  <p class="metric-help">Use same size when the level matters, like total amount sold. Use same pattern when the rise-and-fall shape matters, even if one line is bigger. Then use the same rule in R.</p>
                 </div>
               </div>
             </div>
@@ -628,8 +627,8 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
               <h2>Make Numbers Fair.</h2>
               <p class="simple-line">Big numbers can change the tree too.</p>
               <p class="guide-line">
-                If one column uses much bigger numbers, it can control the early joins. Scaling
-                gives each column a fairer voice.
+                The tree is built from distances. If one column has a much bigger range, it can
+                control the early merges. Scaling gives each column a fairer voice.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between <strong>Original numbers</strong> and <strong>Scaled numbers</strong>.</p>
               <div class="segment-group" id="hier-scale-controls">
@@ -654,12 +653,14 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
               </div>
               <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Numbers used</span>
-                  <strong id="hier-scale-basis" class="metric-value">raw</strong>
+                  <span class="metric-label">X range used</span>
+                  <strong id="hier-scale-basis" class="metric-value">0.00</strong>
+                  <p class="metric-help">Range means max minus min for the x values used by the tree. Closer ranges are better. If one range is much larger, scale first.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">What wins</span>
-                  <strong id="hier-scale-story" class="metric-value">socks dominate</strong>
+                  <span class="metric-label">Y range used</span>
+                  <strong id="hier-scale-story" class="metric-value">0.00</strong>
+                  <p class="metric-help">Range means max minus min for the y values used by the tree. Closer ranges are better. After scaling, both axes count more evenly.</p>
                 </div>
               </div>
             </div>
@@ -697,12 +698,14 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
               </div>
               <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
-                  <span class="metric-label">Last join</span>
-                  <strong id="hier-outlier-height" class="metric-value">0</strong>
+                  <span class="metric-label">Weird point join height</span>
+                  <strong id="hier-outlier-height" class="metric-value">-</strong>
+                  <p class="metric-help">This is the merge height when the weird point finally joins the tree. Lower is better. A very large value means it stayed alone for a long time.</p>
                 </div>
                 <div class="metric-card">
-                  <span class="metric-label">Read it as</span>
-                  <strong id="hier-outlier-story" class="metric-value">stable</strong>
+                  <span class="metric-label">What to do</span>
+                  <strong id="hier-outlier-story" class="metric-value">show it first</strong>
+                  <p class="metric-help">If one point joins only at a large height, inspect it or compare the tree with and without that point.</p>
                 </div>
               </div>
             </div>
@@ -714,8 +717,8 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
               <h2>Describe the Final Groups.</h2>
               <p class="simple-line">After you cut the tree, ask what each group means.</p>
               <p class="guide-line">
-                A useful result is not just a pretty tree. It gives groups you can describe in
-                plain words.
+                Read the cutree output, compute group summaries, compare the groups, and turn the
+                differences into one short sentence per group.
               </p>
               <p class="try-line"><span>Try this:</span> Move the cut, then click the group cards.</p>
               <div class="range-row">
