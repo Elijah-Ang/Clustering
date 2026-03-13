@@ -746,6 +746,60 @@ function lineChartSvg(values, options = {}) {
   `;
 }
 
+function workflowSvg(steps, options = {}) {
+  const width = options.width || 620;
+  const height = options.height || 320;
+  const padding = 34;
+  const accent = options.color || getCssVar("--accent");
+  const accentAlt = options.colorAlt || getCssVar("--accent-alt");
+  const laneY = Math.round(height * 0.46);
+  const cardWidth = 104;
+  const cardHeight = 96;
+  const usableWidth = width - padding * 2;
+
+  const connectors = Array.from({ length: Math.max(steps.length - 1, 0) }, (_, index) => {
+    const startX = padding + (index / Math.max(steps.length - 1, 1)) * usableWidth;
+    const endX = padding + ((index + 1) / Math.max(steps.length - 1, 1)) * usableWidth;
+    return `
+      <line
+        x1="${startX + 22}"
+        y1="${laneY}"
+        x2="${endX - 22}"
+        y2="${laneY}"
+        stroke="${accent}"
+        stroke-opacity="0.22"
+        stroke-width="3"
+        stroke-linecap="round"
+      />
+    `;
+  }).join("");
+
+  const cards = steps
+    .map((step, index) => {
+      const centerX = padding + (index / Math.max(steps.length - 1, 1)) * usableWidth;
+      const x = centerX - cardWidth / 2;
+      const y = laneY - cardHeight / 2;
+      return `
+        <g transform="translate(${x}, ${y})">
+          <rect width="${cardWidth}" height="${cardHeight}" rx="24" fill="rgba(255,255,255,0.88)" stroke="rgba(18,20,23,0.08)" />
+          <circle cx="20" cy="20" r="11" fill="${index % 2 === 0 ? accent : accentAlt}" />
+          <text x="20" y="24" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${index + 1}</text>
+          <text x="20" y="44" fill="${NEUTRAL}" font-size="11">${step.title}</text>
+          <text x="20" y="59" fill="${NEUTRAL}" font-size="11">${step.title2 || ""}</text>
+          <text x="20" y="76" fill="${accent}" font-size="10.5" font-weight="700">${step.note}</text>
+        </g>
+      `;
+    })
+    .join("");
+
+  return `
+    <rect x="0" y="0" width="${width}" height="${height}" rx="28" fill="${SURFACE}" />
+    <text x="${padding}" y="28" fill="${accent}" font-size="12" font-weight="700">Do the steps in order</text>
+    ${connectors}
+    ${cards}
+  `;
+}
+
 function layoutDendrogram(root, width, height, padding = 26) {
   const leaves = [];
   function collectLeaves(node) {
@@ -1051,7 +1105,6 @@ function buildCache(data) {
     complete: hierarchicalClustering(data.linkageData, { linkage: "complete", distance: "euclidean" }),
     single: hierarchicalClustering(data.linkageData, { linkage: "single", distance: "euclidean" }),
     average: hierarchicalClustering(data.linkageData, { linkage: "average", distance: "euclidean" }),
-    centroid: hierarchicalClustering(data.linkageData, { linkage: "centroid", distance: "euclidean" }),
   };
 
   const distanceResults = {
@@ -1183,7 +1236,8 @@ function refineNarrativeLayout() {
   document.querySelectorAll(".code-panel").forEach((panel) => {
     const details = document.createElement("details");
     details.className = "r-peek r-peek-final";
-    details.innerHTML = "<summary>See the R code</summary>";
+    if (panel.closest(".chapter-checklist")) details.open = true;
+    details.innerHTML = `<summary>${panel.closest(".chapter-checklist") ? "Try this in R" : "See the R code"}</summary>`;
     panel.replaceWith(details);
     details.appendChild(panel);
   });
@@ -1234,6 +1288,7 @@ function bindElements() {
     "kmeans-outlier-story",
     "kmeans-final-plot",
     "kmeans-cluster-cards",
+    "kmeans-realdata-plot",
     "hier-hero-plot",
     "hier-intro-plot",
     "hier-merge-slider",
@@ -1276,11 +1331,11 @@ function bindElements() {
     "hier-outlier-dendrogram",
     "hier-outlier-height",
     "hier-outlier-story",
-    "hier-outlier-singleton",
     "hier-final-slider",
     "hier-final-value",
     "hier-final-dendrogram",
     "hier-final-cluster-cards",
+    "hier-realdata-plot",
   ].forEach((id) => {
     refs[id] = document.getElementById(id);
   });
@@ -1408,12 +1463,12 @@ function renderChooseK() {
         { point: diagnostic.run.centroids[0], text: "group middle", dx: 12, dy: -16 },
         ...(state.kmeansSelectedK <= 2
           ? [
-              { screen: [0.12, 0.16], text: "too few groups", color: getCssVar("--accent-alt") },
+              { screen: [0.12, 0.16], text: "too few", color: getCssVar("--accent-alt") },
               { screen: [0.62, 0.78], text: "mixed together" },
             ]
           : state.kmeansSelectedK >= 5
             ? [
-                { screen: [0.64, 0.16], text: "too many groups", color: getCssVar("--accent-alt") },
+                { screen: [0.64, 0.16], text: "too many", color: getCssVar("--accent-alt") },
                 { screen: [0.58, 0.78], text: "split apart" },
               ]
             : [
@@ -1489,7 +1544,7 @@ function renderRandomStarts() {
       note: "best of many starting guesses",
       annotations: [
         { point: best.initialCentroids[0], text: "better start", dx: 12, dy: -14, color: getCssVar("--accent-alt") },
-        { screen: [0.5, 0.14], text: "keep the better answer" },
+        { screen: [0.5, 0.14], text: "keep this one" },
       ],
     }),
   );
@@ -1634,6 +1689,7 @@ function renderHierIntro() {
       labels: data.hierLabels,
       cutLabel: "cut here",
       annotations: [
+        { screen: [0.08, 0.92], text: "starts alone" },
         { screen: [0.08, 0.84], text: "small groups" },
         { screen: [0.46, 0.52], text: "bigger groups", align: "middle", color: getCssVar("--accent-alt") },
         { screen: [0.72, 0.18], text: "group tree", align: "middle" },
@@ -1700,11 +1756,11 @@ function renderHierCut() {
 
   refs["hier-cut-value"].textContent = `${state.hierCutPercent}%`;
   refs["hier-cut-note"].textContent =
-    groups.length <= 3 ? "cut high = fewer big groups" : "cut low = more small groups";
+    groups.length <= 3 ? "cut high = fewer groups" : "cut low = more groups";
   refs["hier-cut-clusters"].textContent = String(groups.length);
   refs["hier-cut-height-label"].textContent = formatNumber(cutHeight, 2);
   refs["hier-cut-story"].textContent =
-    groups.length <= 2 ? "one big group" : groups.length >= 5 ? "many small groups" : "few big groups";
+    groups.length <= 2 ? "few big groups" : groups.length >= 5 ? "many small groups" : "middle cut";
 
   setSvg(
     refs["hier-cut-dendrogram"],
@@ -1718,7 +1774,7 @@ function renderHierCut() {
       annotations: [
         {
           screen: [0.08, 0.16],
-          text: groups.length <= 3 ? "cut high = fewer big groups" : "cut low = more small groups",
+          text: groups.length <= 3 ? "cut high = fewer groups" : "cut low = more groups",
         },
       ],
     }),
@@ -1737,7 +1793,7 @@ function renderHierCut() {
         {
           screen: [0.52, 0.16],
           text:
-            groups.length <= 2 ? "one big group" : groups.length >= 5 ? "many small groups" : "few big groups",
+            groups.length <= 2 ? "few big groups" : groups.length >= 5 ? "many small groups" : "middle cut",
           color: getCssVar("--accent-alt"),
         },
       ],
@@ -1753,19 +1809,16 @@ function renderHierLinkage() {
     single: "closest pair",
     average: "average closeness",
     complete: "farthest pair",
-    centroid: "group middle",
   };
   const displayMap = {
     single: "closest pair",
     average: "average closeness",
     complete: "farthest pair",
-    centroid: "group middle",
   };
   const feelMap = {
-    single: "chains easily",
+    single: "can chain",
     average: "balanced",
     complete: "stays tight",
-    centroid: "follows middles",
   };
 
   refs["hier-linkage-note"].textContent = `${noteMap[state.hierLinkage]} decides each join`;
@@ -1890,14 +1943,12 @@ function renderHierOutlier() {
   const clustering = showOutlier ? cache.outlierDirtyHier : cache.outlierCleanHier;
   const cutHeight = clustering.maxHeight * 0.42;
   const assignments = groupsToAssignments(cutTree(clustering.root, cutHeight), points.length);
-  const singletonRisk = showOutlier ? "high chance" : "low chance";
 
   refs["hier-outlier-note"].textContent = showOutlier
     ? "the weird point stays alone for longer"
     : "no lonely branch yet";
   refs["hier-outlier-height"].textContent = formatNumber(clustering.maxHeight, 2);
-  refs["hier-outlier-story"].textContent = showOutlier ? "lonely branch" : "steady";
-  refs["hier-outlier-singleton"].textContent = singletonRisk;
+  refs["hier-outlier-story"].textContent = showOutlier ? "lonely branch" : "steady tree";
 
   setSvg(
     refs["hier-outlier-scatter"],
@@ -1994,6 +2045,38 @@ function renderHierFinal() {
     .join("");
 }
 
+function renderKmeansRealData() {
+  setSvg(
+    refs["kmeans-realdata-plot"],
+    workflowSvg(
+      [
+        { title: "pick", title2: "columns", note: "close is real" },
+        { title: "make", title2: "numbers fair", note: "scale" },
+        { title: "try", title2: "a few K's", note: "look first" },
+        { title: "rerun", title2: "from starts", note: "keep best" },
+        { title: "name", title2: "the groups", note: "plain words" },
+      ],
+      { width: 620, height: 320 },
+    ),
+  );
+}
+
+function renderHierRealData() {
+  setSvg(
+    refs["hier-realdata-plot"],
+    workflowSvg(
+      [
+        { title: "decide", title2: "what close means", note: "size or shape" },
+        { title: "make", title2: "numbers fair", note: "scale" },
+        { title: "compare", title2: "join rules", note: "3 trees" },
+        { title: "pick", title2: "a cut", note: "simple split" },
+        { title: "name", title2: "the groups", note: "plain words" },
+      ],
+      { width: 620, height: 320 },
+    ),
+  );
+}
+
 function renderAllStatic() {
   renderKmeansUnsupervised();
   renderAlgorithm();
@@ -2002,6 +2085,7 @@ function renderAllStatic() {
   renderScaleDemo();
   renderOutlierDemo();
   renderKmeansInterpretation();
+  renderKmeansRealData();
   renderHierIntro();
   renderHierMerge();
   renderHierCut();
@@ -2010,6 +2094,7 @@ function renderAllStatic() {
   renderHierScale();
   renderHierOutlier();
   renderHierFinal();
+  renderHierRealData();
 }
 
 function animateHeroPlots(time) {

@@ -175,63 +175,6 @@ button {
   display: none;
 }
 
-.start-strip {
-  width: 100%;
-  display: grid;
-  justify-items: center;
-  padding-top: 10px;
-}
-
-.start-card {
-  width: min(100%, 980px);
-  display: grid;
-  gap: 12px;
-  justify-items: center;
-  padding: 18px 20px;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.68);
-  border: 1px solid rgba(255, 255, 255, 0.44);
-  box-shadow: 0 14px 34px rgba(18, 20, 23, 0.05);
-  text-align: center;
-}
-
-.start-steps {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.start-step {
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-  padding: 12px 10px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.52);
-  border: 1px solid var(--line);
-}
-
-.start-step span {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.start-step p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.88rem;
-  line-height: 1.45;
-}
-
 .hero {
   display: grid;
   grid-template-columns: minmax(320px, var(--copy-width)) minmax(0, 1fr);
@@ -656,6 +599,10 @@ h2 {
   line-height: 1.65;
 }
 
+.chapter-copy .r-peek-final {
+  margin-top: 18px;
+}
+
 .plot,
 .plot-large,
 .plot-small,
@@ -685,12 +632,20 @@ h2 {
   min-height: 420px;
 }
 
+.plot-checklist {
+  min-height: 360px;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   max-width: none;
   margin: 0;
+}
+
+.metric-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .metric-card {

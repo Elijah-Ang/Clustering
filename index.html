@@ -25,17 +25,6 @@
 
       <main>
         <article class="method method-active" id="kmeans" data-theme="kmeans">
-          <section class="start-strip reveal">
-            <div class="start-card">
-              <span class="eyebrow">Start here</span>
-              <div class="start-steps">
-                <div class="start-step"><span>1</span><p>Watch the picture.</p></div>
-                <div class="start-step"><span>2</span><p>Move one control.</p></div>
-                <div class="start-step"><span>3</span><p>Read one short explanation.</p></div>
-                <div class="start-step"><span>4</span><p>Keep scrolling.</p></div>
-              </div>
-            </div>
-          </section>
           <section class="hero reveal">
             <div class="hero-copy">
               <p class="eyebrow">K-Means</p>
@@ -91,20 +80,6 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
                 <span class="surface-caption">same dots, now sorted into groups</span>
               </div>
               <svg id="kmeans-unsupervised-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Unsupervised learning reveal"></svg>
-              <div class="metric-grid">
-                <div class="metric-card">
-                  <span class="metric-label">Main idea</span>
-                  <strong class="metric-value">keep close dots together</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Works by</span>
-                  <strong class="metric-value">how close dots are</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Best shape</span>
-                  <strong class="metric-value">roughly round groups</strong>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -213,7 +188,7 @@ fit &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">Try more than once</p>
-              <h2>A Bad First Guess Can Give a Bad Grouping.</h2>
+              <h2>Try More Than One Start.</h2>
               <p class="simple-line">A bad first guess can give a bad answer.</p>
               <p class="guide-line">
                 K-means begins with a first guess for the group middles. Different first guesses
@@ -284,7 +259,7 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
                 <span id="kmeans-scale-note" class="surface-caption">watch one axis stop taking over</span>
               </div>
               <svg id="kmeans-scale-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Scaling demo for K-means"></svg>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
                   <span class="metric-label">Numbers used</span>
                   <strong id="kmeans-scale-basis" class="metric-value">raw</strong>
@@ -292,10 +267,6 @@ fit_25 &lt;- kmeans(x_scaled, centers = 3, nstart = 25)</code></pre>
                 <div class="metric-card">
                   <span class="metric-label">What wins</span>
                   <strong id="kmeans-scale-story" class="metric-value">socks dominate</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Safe default</span>
-                  <strong class="metric-value">scale first</strong>
                 </div>
               </div>
             </div>
@@ -385,33 +356,23 @@ aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
                 <li>Check for weird points before you trust the groups.</li>
                 <li>Describe each final group in plain words.</li>
               </ul>
-            </div>
-            <div class="chapter-visual surface">
-              <div class="surface-heading">
-                <span>K-means in R</span>
-                <span class="surface-caption">open only when you want the code</span>
-              </div>
               <pre class="code-panel"><code>x &lt;- scale(df[, vars])
 wss &lt;- sapply(1:8, function(k) kmeans(x, centers = k, nstart = 25)$tot.withinss)
 fit &lt;- kmeans(x, centers = 3, nstart = 25)
 df$cluster &lt;- fit$cluster
 aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
             </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>Work in this order</span>
+                <span class="surface-caption">simple path from raw data to named groups</span>
+              </div>
+              <svg id="kmeans-realdata-plot" class="plot plot-checklist" viewBox="0 0 620 320" role="img" aria-label="K-means real data checklist flow"></svg>
+            </div>
           </section>
         </article>
 
         <article class="method" id="hierarchical" data-theme="hierarchical" hidden>
-          <section class="start-strip reveal">
-            <div class="start-card">
-              <span class="eyebrow">Start here</span>
-              <div class="start-steps">
-                <div class="start-step"><span>1</span><p>Watch the picture.</p></div>
-                <div class="start-step"><span>2</span><p>Move one control.</p></div>
-                <div class="start-step"><span>3</span><p>Read one short explanation.</p></div>
-                <div class="start-step"><span>4</span><p>Keep scrolling.</p></div>
-              </div>
-            </div>
-          </section>
           <section class="hero reveal">
             <div class="hero-copy">
               <p class="eyebrow">Hierarchical</p>
@@ -441,7 +402,7 @@ aggregate(df[, vars], list(cluster = df$cluster), mean)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">What this method does</p>
-              <h2>Each Dot Starts Alone.</h2>
+              <h2>Start Alone, Then Join.</h2>
               <p class="simple-line">Each dot starts alone, then close dots join.</p>
               <p class="guide-line">
                 The joins keep going until everything is connected. Later you decide where to cut
@@ -462,20 +423,6 @@ plot(hc)</code></pre>
                 <span class="surface-caption">start with one dot on each branch</span>
               </div>
               <svg id="hier-intro-plot" class="plot" viewBox="0 0 620 440" role="img" aria-label="Hierarchical clustering introduction"></svg>
-              <div class="metric-grid">
-                <div class="metric-card">
-                  <span class="metric-label">Start</span>
-                  <strong class="metric-value">one point each</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Build it</span>
-                  <strong class="metric-value">bottom up</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Choose groups</span>
-                  <strong class="metric-value">after plotting</strong>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -531,10 +478,10 @@ plot(hc)</code></pre>
             <div class="chapter-copy">
               <p class="eyebrow">Cut the tree</p>
               <h2>Cut the Tree to Make Groups.</h2>
-              <p class="simple-line">A high cut makes a few big groups.</p>
+              <p class="simple-line">A high cut gives fewer groups.</p>
               <p class="guide-line">
-                A low cut makes more small groups. Move the cut line until the picture feels simple
-                and believable.
+                A low cut gives more groups. Move the cut line until the picture feels simple and
+                believable.
               </p>
               <p class="try-line"><span>Try this:</span> Slide the cut line up and down.</p>
               <div class="range-row">
@@ -585,7 +532,7 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">How groups choose to join</p>
-              <h2>How Groups Choose to Join.</h2>
+              <h2>Three Ways Groups Can Join.</h2>
               <p class="simple-line">Groups can join by the closest pair, average closeness, or farthest pair.</p>
               <p class="guide-line">
                 The tree changes because the rule for joining changes. Switch the rule and watch
@@ -596,12 +543,11 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
                 <button class="segment" type="button" data-linkage="single">Closest pair (single)</button>
                 <button class="segment is-active" type="button" data-linkage="average">Average closeness (average)</button>
                 <button class="segment" type="button" data-linkage="complete">Farthest pair (complete)</button>
-                <button class="segment" type="button" data-linkage="centroid">Group middle (centroid)</button>
               </div>
             </div>
             <div class="chapter-visual surface surface-dual">
               <div class="surface-heading">
-                <span>Switch the join rule</span>
+                <span>Closest, average, or farthest</span>
                 <span id="hier-linkage-note" class="surface-caption">watch how the tree changes</span>
               </div>
               <div class="split-visuals">
@@ -637,7 +583,7 @@ groups &lt;- cutree(hc, h = 3.2)</code></pre>
               <h2>What Does Close Mean?</h2>
               <p class="simple-line">Things can be close by size or close by pattern.</p>
               <p class="guide-line">
-                First decide what kind of closeness matters. Then the technical names are
+                First decide what kind of closeness matters. Later, the technical names are
                 Euclidean distance for size and correlation distance for pattern.
               </p>
               <p class="try-line"><span>Try this:</span> Switch between <strong>Same size</strong> and <strong>Same pattern</strong>.</p>
@@ -663,7 +609,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
                 <svg id="hier-distance-dendrogram" class="plot plot-small-wide" viewBox="0 0 620 180" role="img" aria-label="Distance measure dendrogram"></svg>
                 <div id="hier-distance-profiles" class="profile-grid" aria-live="polite"></div>
               </div>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
                   <span class="metric-label">Close means</span>
                   <strong id="hier-distance-active" class="metric-value">same size</strong>
@@ -671,10 +617,6 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
                 <div class="metric-card">
                   <span class="metric-label">This matches</span>
                   <strong id="hier-distance-story" class="metric-value">how much there is</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Groups shown</span>
-                  <strong class="metric-value">3 clusters</strong>
                 </div>
               </div>
             </div>
@@ -710,7 +652,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
                   <svg id="hier-scale-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Hierarchical scaling dendrogram"></svg>
                 </div>
               </div>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
                   <span class="metric-label">Numbers used</span>
                   <strong id="hier-scale-basis" class="metric-value">raw</strong>
@@ -718,10 +660,6 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
                 <div class="metric-card">
                   <span class="metric-label">What wins</span>
                   <strong id="hier-scale-story" class="metric-value">socks dominate</strong>
-                </div>
-                <div class="metric-card">
-                  <span class="metric-label">Safe default</span>
-                  <strong class="metric-value">scale first</strong>
                 </div>
               </div>
             </div>
@@ -757,7 +695,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
                   <svg id="hier-outlier-dendrogram" class="plot plot-half" viewBox="0 0 290 280" role="img" aria-label="Hierarchical outlier dendrogram"></svg>
                 </div>
               </div>
-              <div class="metric-grid">
+              <div class="metric-grid metric-grid-two">
                 <div class="metric-card">
                   <span class="metric-label">Last join</span>
                   <strong id="hier-outlier-height" class="metric-value">0</strong>
@@ -766,10 +704,6 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
                   <span class="metric-label">Read it as</span>
                   <strong id="hier-outlier-story" class="metric-value">stable</strong>
                 </div>
-                <div class="metric-card">
-                  <span class="metric-label">Lonely branch risk</span>
-                  <strong id="hier-outlier-singleton" class="metric-value">low</strong>
-                </div>
               </div>
             </div>
           </section>
@@ -777,7 +711,7 @@ hc_corr &lt;- hclust(d_corr, method = "average")</code></pre>
           <section class="chapter reveal">
             <div class="chapter-copy">
               <p class="eyebrow">Describe the final groups</p>
-              <h2>What Do These Groups Mean?</h2>
+              <h2>Describe the Final Groups.</h2>
               <p class="simple-line">After you cut the tree, ask what each group means.</p>
               <p class="guide-line">
                 A useful result is not just a pretty tree. It gives groups you can describe in
@@ -825,18 +759,19 @@ aggregate(df[, vars], list(cluster = groups), mean)</code></pre>
                 <li>Check whether weird points are making lonely branches.</li>
                 <li>Describe each final group in plain words.</li>
               </ul>
-            </div>
-            <div class="chapter-visual surface">
-              <div class="surface-heading">
-                <span>Hierarchical in R</span>
-                <span class="surface-caption">open only when you want the code</span>
-              </div>
               <pre class="code-panel"><code>x &lt;- scale(df[, vars])
 d &lt;- dist(x)
 hc &lt;- hclust(d, method = "average")
 plot(hc)
 groups &lt;- cutree(hc, h = 3.2)
 aggregate(df[, vars], list(cluster = groups), mean)</code></pre>
+            </div>
+            <div class="chapter-visual surface">
+              <div class="surface-heading">
+                <span>Work in this order</span>
+                <span class="surface-caption">simple path from raw data to named groups</span>
+              </div>
+              <svg id="hier-realdata-plot" class="plot plot-checklist" viewBox="0 0 620 320" role="img" aria-label="Hierarchical real data checklist flow"></svg>
             </div>
           </section>
         </article>
